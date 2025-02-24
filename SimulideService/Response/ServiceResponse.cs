@@ -36,14 +36,10 @@ public class ServiceResponse<T>
     
     public IActionResult ToActionResult()
     {
-        return StatusCode switch
+        return new ObjectResult(StatusCode)
         {
-            HttpStatusCode.OK => new OkObjectResult(this),
-            HttpStatusCode.BadRequest => new BadRequestObjectResult(this),
-            HttpStatusCode.NotFound => new NotFoundObjectResult(this),
-            HttpStatusCode.InternalServerError => new StatusCodeResult(500),
-            HttpStatusCode.BadGateway => new StatusCodeResult(502),
-            _ => new StatusCodeResult((int)StatusCode)
+            StatusCode = (int)StatusCode,
+            Value = this
         };
     } 
 }
