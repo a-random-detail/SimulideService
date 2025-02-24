@@ -8,7 +8,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8e9d4c7c-e628-4e71-91bb-bf6f24b66a47" name="Changes" comment="" />
+    <list default="true" id="8e9d4c7c-e628-4e71-91bb-bf6f24b66a47" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.SimulideService/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.SimulideService/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SimulideService.UnitTests/Healthcheck/HealthcheckController.Tests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/SimulideService.UnitTests/Healthcheck/HealthcheckController.Tests.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -152,7 +155,7 @@
       <option name="presentableId" value="Default" />
       <updated>1740347768949</updated>
       <workItem from="1740347771279" duration="11560000" />
-      <workItem from="1740370068529" duration="1660000" />
+      <workItem from="1740370068529" duration="1774000" />
     </task>
     <servers />
   </component>

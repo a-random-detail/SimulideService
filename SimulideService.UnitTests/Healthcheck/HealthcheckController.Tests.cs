@@ -32,10 +32,10 @@ public class HealthcheckController_Tests
         var result = response as OkObjectResult;
         
 
-        Assert.AreEqual((int)HttpStatusCode.OK, result.StatusCode);
+        Assert.That(result.StatusCode, Is.EqualTo((int)HttpStatusCode.OK));
         var payload = result.Value as ServiceResponse<ServiceStatus>;
-        Assert.IsTrue(payload.Success);
-        Assert.IsTrue(payload.Data.DatabaseIsHealthy);
+        Assert.IsTrue(payload!.Success);
+        Assert.IsTrue(payload.Data!.DatabaseIsHealthy);
     }
     
     [Test]
@@ -49,7 +49,7 @@ public class HealthcheckController_Tests
         var response = await _healthcheckController.Get() as StatusCodeResult;
         var result = response.StatusCode as int?; 
         
-        Assert.AreEqual((int)HttpStatusCode.BadGateway, result);
+        Assert.That(result, Is.EqualTo((int)HttpStatusCode.BadGateway));
     }
     
 }
