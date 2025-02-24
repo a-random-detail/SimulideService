@@ -7,7 +7,7 @@
     depends_on:
       - simulide-db
     ports:
-        - "3333:80"
+        - "8080:8080"
     networks:
         - simulide-net
   simulide-db:
@@ -18,7 +18,6 @@
     environment:
       POSTGRES_USER: simulide
       POSTGRES_PASSWORD: simulide
-      POSTGRES_DB: simulide
     volumes: 
       - db:/var/lib/postgresql/data
     networks:

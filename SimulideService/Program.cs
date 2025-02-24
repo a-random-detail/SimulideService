@@ -15,8 +15,8 @@ builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 
 builder.Services.AddDbContext<CollabContext>(opts =>
 {
-    opts.UseNpgsql(builder.Configuration.GetConnectionString(
-        @"Server=simulide-db;Port=5432;Database=simulide;User Id=simulide;Password=simulide;"));
+    opts.UseNpgsql(
+        @"Server=simulide-db;Port=5432;Database=simulide;User Id=simulide;Password=simulide;");
 
 });
 
@@ -34,5 +34,15 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<CollabContext>();
+    if (context.Database.GetPendingMigrations().Any())
+    {
+        context.Database.Migrate();
+    }
+}
 
 app.Run();
