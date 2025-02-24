@@ -1,0 +1,32 @@
+﻿services:
+  simulideservice:
+    image: simulideservice
+    build:
+      context: .
+      dockerfile: SimulideService/Dockerfile
+    depends_on:
+      - simulide-db
+    ports:
+        - "3333:80"
+    networks:
+        - simulide-net
+  simulide-db:
+    image: postgres:14.6-alpine
+    restart: always
+    ports:
+        - "5432:5432"
+    environment:
+      POSTGRES_USER: simulide
+      POSTGRES_PASSWORD: simulide
+      POSTGRES_DB: simulide
+    volumes: 
+      - db:/var/lib/postgresql/data
+    networks:
+        - simulide-net
+volumes:
+    db:
+      driver: local
+  
+networks:
+    simulide-net:
+      driver: bridge

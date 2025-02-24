@@ -1,0 +1,11 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=16915fd2_002D804d_002D4d4c_002Dafa9_002D39a5240b5db5/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="HealthCheckTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Or&gt;
+    &lt;TestAncestor&gt;
+      &lt;TestId&gt;NUnit3x::F99EB3F1-E69C-4554-8E6F-54FD16F6CDF0::net8.0::SimulideService.FunctionalTests.HealthCheckTest&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::05D16C2B-178B-47FF-9BFA-21266680C4B8::net8.0::SimulideService.UnitTests.Healthcheck.HealthcheckController_Tests.Get_ReturnsOk_WhenDbStatusIsHealthy&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::05D16C2B-178B-47FF-9BFA-21266680C4B8::net8.0::SimulideService.UnitTests.Healthcheck.HealthcheckController_Tests&lt;/TestId&gt;
+    &lt;/TestAncestor&gt;
+    &lt;Project Location="/Users/daldem/projects/learning/SimulideService/SimulideService.FunctionalTests" Presentation="&amp;lt;SimulideService.FunctionalTests&amp;gt;" /&gt;
+  &lt;/Or&gt;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
