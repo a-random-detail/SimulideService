@@ -10,7 +10,7 @@ namespace SimulideService.FunctionalTests;
 [SetUpFixture]
 public class Application
 {
-    public static IAlbaHost Host { get; private set; }
+    public static IAlbaHost? Host { get; private set; }
     
     [OneTimeSetUp]
     public async Task Initialize()
@@ -22,7 +22,6 @@ public class Application
             {
                 services.AddScoped<IStatusRepository, MockSuccessStatusRepository>();
             });
-            
         });
     }
     
