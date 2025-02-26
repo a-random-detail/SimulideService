@@ -3,14 +3,14 @@ using SimulideService.Domain;
 
 namespace SimulideService.Repositories;
 
-public interface ITransactionManager<C> where C : DbContext
+public interface ITransactionManager<out TC> where TC : DbContext
 {
-   Task<Either<List<Exception>, T>> ExecuteInTransaction<T>(Func<C, Task<T>> action); 
+   Task<Either<List<Exception>, T>> ExecuteInTransaction<T>(Func<TC, Task<T>> action); 
 }
 
-public class TransactionManager<C>(C dbContext): ITransactionManager<C> where C : DbContext
+public class TransactionManager<TC>(TC dbContext): ITransactionManager<TC> where TC : DbContext
 {
-   public async Task<Either<List<Exception>, T>> ExecuteInTransaction<T>(Func<C, Task<T>> action)
+   public async Task<Either<List<Exception>, T>> ExecuteInTransaction<T>(Func<TC, Task<T>> action)
    {
       await using var transaction = await dbContext.Database.BeginTransactionAsync();
 

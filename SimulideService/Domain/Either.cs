@@ -1,40 +1,40 @@
 namespace SimulideService.Domain;
 
-public class Either<L, R>
+public class Either<TL, TR>
 {
-    private readonly L _left;
-    private readonly R _right;
+    private readonly TL _left = default!;
+    private readonly TR _right = default!;
     private readonly bool _isLeft;
     
-    public static implicit operator Either<L, R>(L left) => new(left);
-    public static implicit operator Either<L, R>(R right) => new(right);
+    public static implicit operator Either<TL, TR>(TL left) => new(left);
+    public static implicit operator Either<TL, TR>(TR right) => new(right);
     
-    public static Either<L, R> Left(L left) => new(left);
-    public static Either<L, R> Right(R right) => new(right);
+    public static Either<TL, TR> Left(TL left) => new(left);
+    public static Either<TL, TR> Right(TR right) => new(right);
 
-    public Either(L left)
+    public Either(TL left)
     {
         _left = left;
         _isLeft = true;
     }
 
-    public Either(R right)
+    public Either(TR right)
     {
         _right = right;
         _isLeft = false;
     }
 
-    public T Match<T>(Func<L, T> error, Func<R, T> success)
+    public T Match<T>(Func<TL, T> error, Func<TR, T> success)
     {
         return _isLeft ? error(_left) : success(_right);
     }
     
-    public async Task<Either<L, TResult>> MapAsync<TResult>(Func<R, Task<Either<L, TResult>>> func)
+    public async Task<Either<TL, TResult>> MapAsync<TResult>(Func<TR, Task<Either<TL, TResult>>> func)
     {
         return _isLeft ? _left : await func(_right);
     }
     
-    public Either<L, TResult> Map<TResult>(Func<R, TResult> func)
+    public Either<TL, TResult> Map<TResult>(Func<TR, TResult> func)
     {
         return _isLeft ? _left : func(_right);
     }
