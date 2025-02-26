@@ -15,11 +15,11 @@ public class StatusRepository(CollabContext dbContext) : IStatusRepository
         try
         {
             var result = dbContext.Documents.Count() >= 0;
-            return Task.FromResult(new Either<Exception, bool>(result));
+            return Task.FromResult(Either<Exception, bool>.Right(result));
         }
         catch (Exception ex)
         {
-            return Task.FromResult(new Either<Exception, bool>(ex));
+            return Task.FromResult(Either<Exception, bool>.Left(ex));
         }
     }
 }

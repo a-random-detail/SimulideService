@@ -14,8 +14,8 @@ public static class CreateDocumentRequestValidator
             errors.Add(new Exception("Name is required"));
 
         return errors.Any()
-            ? new Either<List<Exception>, PostDocumentRequest>(errors)
-            : new Either<List<Exception>, PostDocumentRequest>(documentRequest);
+            ? Either<List<Exception>, PostDocumentRequest>.Left(errors)
+            : Either<List<Exception>, PostDocumentRequest>.Right(documentRequest);
     }
     
 }
