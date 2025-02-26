@@ -4,6 +4,7 @@ using SimulideService.Domain.Contracts;
 using SimulideService.Domain.Data;
 using SimulideService.Response;
 using SimulideService.Services;
+using SimulideService.Validators;
 using static SimulideService.Response.ServiceResponse<SimulideService.Domain.Data.Document>;
 
 namespace SimulideService.Controllers;
@@ -18,7 +19,7 @@ public class DocumentController(IDocumentService documentService, ILogger<Docume
     {
         var result = await documentService.CreateDocumentAsync(document);
         return result.Match<ServiceResponse<Document>>(
-            error: exs => ErrorResult(HttpStatusCode.BadRequest,  exs.Select(x => new ServiceError { Message = x.Message} ).ToList()),
+            error: HandleDocumentErrors,
             success: doc => SuccessResult(HttpStatusCode.Created, doc))
             .ToActionResult();
     }
@@ -27,5 +28,15 @@ public class DocumentController(IDocumentService documentService, ILogger<Docume
     public async Task<IActionResult> Get()
     {
         throw new NotImplementedException();
+    }
+    
+    private static ServiceResponse<Document> HandleDocumentErrors(List<Exception> exceptions)
+    {
+        if (exceptions.Any(x => x is DocumentValidationException))
+            return ErrorResult(HttpStatusCode.BadRequest,
+                exceptions.Select(ex => new ServiceError { Message = ex.Message }).ToList());
+        
+        return ErrorResult(HttpStatusCode.InternalServerError,
+                exceptions.Select(ex => new ServiceError { Message = ex.Message }).ToList());
     }
 }

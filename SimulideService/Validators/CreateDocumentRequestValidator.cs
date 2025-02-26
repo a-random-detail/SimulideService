@@ -11,7 +11,7 @@ public static class CreateDocumentRequestValidator
         List<Exception> errors = [];
 
         if (string.IsNullOrWhiteSpace(documentRequest.Name))
-            errors.Add(new Exception("Name is required"));
+            errors.Add(new DocumentValidationException("Name is required"));
 
         return errors.Any()
             ? Either<List<Exception>, PostDocumentRequest>.Left(errors)

@@ -24,7 +24,7 @@ public class TransactionManager<TC>(TC dbContext): ITransactionManager<TC> where
       catch (Exception ex)
       {
          await transaction.RollbackAsync();
-         return Either<List<Exception>, T>.Left([ex]);
+         return Either<List<Exception>, T>.Left([new Exception("An error occurred while processing the request.")]);
       }
    }
 }

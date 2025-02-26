@@ -1,7 +1,7 @@
-using System.Net.Mime;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using SimulideService.Domain;
 using SimulideService.Domain.Contracts;
+using SimulideService.FunctionalTests.DB;
 using SimulideService.Repositories;
 using SimulideService.Response;
 
@@ -56,6 +56,36 @@ public class PostDocument
         Assert.That(payload.Errors, Is.Not.Null);
         Assert.That(payload.Errors.Count, Is.EqualTo(1));
         Assert.That(payload.Errors[0].Message, Is.EqualTo("Name is required"));
+    }
+    
+    [Test]
+    public async Task PostDocument_ReturnsInternalServerError_WithDatabaseIssue()
+    {
+        var errorHost = await AlbaHost.For<Program>(x =>
+        {
+            x.UseEnvironment("Test");
+            x.ConfigureServices((context, services) =>
+            {
+                services.AddScoped<IDocumentRepository, ErrorDocumentRepository>();
+            });
+                                    
+                                }); 
+        var response = await errorHost.Scenario(_ =>
+        {
+            _.Post.Json(new PostDocumentRequest
+            {
+                Name = "This is a valid name",
+                Content = "Content \n also \n\t valid"
+            }).ToUrl("/documents");
+            _.StatusCodeShouldBe(500); // BadRequest
+        });
+        
+        var payload = response.ReadAsJson<ServiceResponse<Domain.Data.Document>>();
+        
+        Assert.That(payload.Success, Is.False);
+        Assert.That(payload.Errors, Is.Not.Null);
+        Assert.That(payload.Errors.Count, Is.EqualTo(1));
+        Assert.That(payload.Errors[0].Message, Is.EqualTo("An error occurred while processing the request."));
     }
 
 }
