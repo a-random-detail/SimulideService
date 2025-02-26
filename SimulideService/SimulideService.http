@@ -1,6 +1,20 @@
 @SimulideService_HostAddress = http://localhost:8080
 
-GET {{SimulideService_HostAddress}}/weatherforecast/
+GET {{SimulideService_HostAddress}}/documents/
 Accept: application/json
 
 ###
+
+GET {{SimulideService_HostAddress}}/healthcheck/
+Accept: application/json
+
+###
+
+POST {{SimulideService_HostAddress}}/documents/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "test",
+  "content": "test"
+}
