@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using SimulideService.FunctionalTests.DB;
 using SimulideService.Repositories;
@@ -23,6 +24,7 @@ public class HealthCheckTest
     {
         var errorHost = await AlbaHost.For<Program>(x =>
         {
+            x.UseEnvironment("Test");
             x.ConfigureServices((context, services) =>
             {
                 services.AddScoped<IStatusRepository, MockFailingStatusRepository>();

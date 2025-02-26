@@ -1,6 +1,9 @@
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using SimulideService.Domain.Data;
 using SimulideService.Repositories;
+using SimulideService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,13 +15,28 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped(typeof(ITransactionManager<>), typeof(TransactionManager<>));
 
-builder.Services.AddDbContext<CollabContext>(opts =>
+if (builder.Environment.EnvironmentName == "Test")
+    builder.Configuration.AddJsonFile("appsettings.Test.json", optional: false);
+
+var useInMemory = builder.Configuration.GetValue<bool>("UseInMemoryDb");
+if (useInMemory)
 {
-    opts.UseNpgsql(
-        @"Server=simulide-db;Port=5432;Database=simulide;User Id=simulide;Password=simulide;");
-
-});
+    builder.Services.AddDbContext<CollabContext>(opts =>
+    {
+        opts.UseInMemoryDatabase("CollabDb");
+        opts.ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+    });
+} else {
+    builder.Services.AddDbContext<CollabContext>(opts =>
+    {
+        opts.UseNpgsql(
+            @"Server=simulide-db;Port=5432;Database=simulide;User Id=simulide;Password=simulide;");
+    });
+}
 
 var app = builder.Build();
 
@@ -34,8 +52,10 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-using (var scope = app.Services.CreateScope())
+
+if (!useInMemory)
 {
+    using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
 
     var context = services.GetRequiredService<CollabContext>();
