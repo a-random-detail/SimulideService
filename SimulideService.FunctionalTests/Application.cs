@@ -47,8 +47,6 @@ public class Application
         using var scope = Host.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
         await dbContext.Database.MigrateAsync();
-        
-        // await EnsureTableExists(testConnectionString);
     }
 
     [OneTimeTearDown]

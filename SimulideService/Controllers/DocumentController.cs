@@ -32,10 +32,7 @@ public class DocumentController(IDocumentService documentService, IMediator medi
     {
         var result = await mediator.Send(new GetDocumentByIdQuery(id), cancellationToken);
         return result.Match<ServiceResponse<Document>>(
-            error: e => ErrorResult(HttpStatusCode.NotFound, [
-                new ServiceError { Message = e.Message }
-                    //{ Message = "Document not found" }
-            ]),
+            error: e => HandleDocumentErrors([e]),
             success: doc => SuccessResult(HttpStatusCode.OK, doc))
             .ToActionResult();
     }
@@ -45,8 +42,11 @@ public class DocumentController(IDocumentService documentService, IMediator medi
         if (exceptions.Any(x => x is DocumentValidationException))
             return ErrorResult(HttpStatusCode.BadRequest,
                 exceptions.Select(ex => new ServiceError { Message = ex.Message }).ToList());
-        
+        if (exceptions.Any(x => x is KeyNotFoundException)) 
+            return ErrorResult(HttpStatusCode.NotFound, [ new ServiceError { Message = exceptions.First().Message }]);
+       
         return ErrorResult(HttpStatusCode.InternalServerError,
-                exceptions.Select(ex => new ServiceError { Message = ex.Message }).ToList());
+                exceptions.Select(ex => new ServiceError { Message = "An error occurred while processing the request." }).ToList());
     }
+    
 }

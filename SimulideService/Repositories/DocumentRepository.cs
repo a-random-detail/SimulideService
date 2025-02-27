@@ -4,12 +4,12 @@ using SimulideService.Domain.Data;
 
 namespace SimulideService.Repositories;
 
-public interface IDocumentRepository
+public interface IDocumentWriteRepository
 {
    Task<Document> CreateAsync(CollabContext dbContext, Document document); 
 }
 
-public class DocumentRepository : IDocumentRepository
+public class DocumentWriteRepository : IDocumentWriteRepository
 {
    public async Task<Document> CreateAsync(CollabContext dbContext, Document document)
    {

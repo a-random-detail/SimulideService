@@ -73,7 +73,7 @@ public class PostDocument
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<CollabContext>));
                 if (descriptor != null) services.Remove(descriptor);
 
-                services.AddScoped<IDocumentRepository, ErrorDocumentRepository>();
+                services.AddScoped<IDocumentWriteRepository, ErrorDocumentWriteRepository>();
                 services.AddDbContext<CollabContext>(options =>
                     options.UseNpgsql(Application.PostgreSqlContainer!.GetConnectionString()));
 

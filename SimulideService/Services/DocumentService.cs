@@ -12,13 +12,13 @@ public interface IDocumentService
 }
 
 public class DocumentService(
-   IDocumentRepository documentRepository, 
+   IDocumentWriteRepository documentWriteRepository, 
    ITransactionManager<CollabContext> transactionManager): IDocumentService
 {
    public async Task<Either<List<Exception>, Document>> CreateDocumentAsync(PostDocumentRequest request)
    {
       return await CreateDocumentRequestValidator.FieldsAreValid(request)
          .Map(Document.FromRequest)
-         .MapAsync(document => transactionManager.ExecuteInTransaction(async (dbContext) => await documentRepository.CreateAsync(dbContext, document)));
+         .MapAsync(document => transactionManager.ExecuteInTransaction(async (dbContext) => await documentWriteRepository.CreateAsync(dbContext, document)));
    }
 }

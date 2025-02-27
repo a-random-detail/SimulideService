@@ -20,7 +20,7 @@ builder.Services.AddSingleton<DatabaseConfig>();
 builder.Services.AddSingleton<NpgsqlConnectionFactory>();
 builder.Services.AddScoped<IDocumentReadRepository, DocumentReadRepository>();
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
-builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IDocumentWriteRepository, DocumentWriteRepository>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetDocumentByIdQueryHandler).Assembly));
 builder.Services.AddScoped(typeof(ITransactionManager<>), typeof(TransactionManager<>));
@@ -46,6 +46,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+return;
+
 static void ApplyMigrations(WebApplication webApplication)
 {
     using var scope = webApplication.Services.CreateScope();
