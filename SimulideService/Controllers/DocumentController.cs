@@ -1,7 +1,10 @@
 using System.Net;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SimulideService.Domain.Contracts;
 using SimulideService.Domain.Data;
+using SimulideService.Repositories;
+using SimulideService.Repositories.Queries;
 using SimulideService.Response;
 using SimulideService.Services;
 using SimulideService.Validators;
@@ -11,7 +14,7 @@ namespace SimulideService.Controllers;
 
 [ApiController]
 [Route("/documents")]
-public class DocumentController(IDocumentService documentService, ILogger<DocumentController> logger)
+public class DocumentController(IDocumentService documentService, IMediator mediator, ILogger<DocumentController> logger)
     : ControllerBase
 {
     [HttpPost]
@@ -24,10 +27,17 @@ public class DocumentController(IDocumentService documentService, ILogger<Docume
             .ToActionResult();
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Get()
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var result = await mediator.Send(new GetDocumentByIdQuery(id), cancellationToken);
+        return result.Match<ServiceResponse<Document>>(
+            error: e => ErrorResult(HttpStatusCode.NotFound, [
+                new ServiceError
+                    { Message = "Document not found" }
+            ]),
+            success: doc => SuccessResult(HttpStatusCode.OK, doc))
+            .ToActionResult();
     }
     
     private static ServiceResponse<Document> HandleDocumentErrors(List<Exception> exceptions)

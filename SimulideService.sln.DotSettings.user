@@ -13,5 +13,5 @@
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=609afe2b_002D3abc_002D4fd1_002Dbfd5_002Dc20c3e771763/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;SimulideService.FunctionalTests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;Project Location="/Users/daldem/projects/learning/SimulideService/SimulideService.FunctionalTests" Presentation="&amp;lt;SimulideService.FunctionalTests&amp;gt;" /&gt;
+  &lt;Solution /&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

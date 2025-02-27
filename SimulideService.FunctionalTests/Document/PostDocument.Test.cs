@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using SimulideService.Domain.Contracts;
+using SimulideService.Domain.Data;
 using SimulideService.FunctionalTests.DB;
 using SimulideService.Repositories;
 using SimulideService.Response;
@@ -64,12 +67,22 @@ public class PostDocument
         var errorHost = await AlbaHost.For<Program>(x =>
         {
             x.UseEnvironment("Test");
+
             x.ConfigureServices((context, services) =>
             {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<CollabContext>));
+                if (descriptor != null) services.Remove(descriptor);
+
                 services.AddScoped<IDocumentRepository, ErrorDocumentRepository>();
+                services.AddDbContext<CollabContext>(options =>
+                    options.UseNpgsql(Application.PostgreSqlContainer!.GetConnectionString()));
+
+                // Apply migrations
+                using var scope = services.BuildServiceProvider().CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
+                dbContext.Database.Migrate();
             });
-                                    
-                                }); 
+        }); 
         var response = await errorHost.Scenario(_ =>
         {
             _.Post.Json(new PostDocumentRequest
