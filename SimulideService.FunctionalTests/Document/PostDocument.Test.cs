@@ -80,7 +80,7 @@ public class PostDocument
                 // Apply migrations
                 using var scope = services.BuildServiceProvider().CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
-                dbContext.Database.Migrate();
+                dbContext.Database.EnsureCreated();
             });
         }); 
         var response = await errorHost.Scenario(_ =>

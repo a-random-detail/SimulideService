@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SimulideService.Domain.Contracts;
 using SimulideService.Domain.Data;
@@ -27,7 +28,8 @@ public class GetDocument
 
         using var scope = Application.Host!.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
-        
+
+        await dbContext.Database.MigrateAsync();
         dbContext.Documents.Add(expectedDocument);
         await dbContext.SaveChangesAsync();
        

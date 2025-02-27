@@ -1,4 +1,6 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using SimulideService;
 using SimulideService.Domain.Data;
 using SimulideService.Repositories;
@@ -26,31 +28,13 @@ var configuration = builder.Configuration;
 if (builder.Environment.EnvironmentName == "Test")
     builder.Configuration.AddJsonFile("appsettings.Test.json", optional: false);
 var databaseConfig = DatabaseConfig.Load(configuration);
-
+Console.WriteLine($">>>>> current connection string: {databaseConfig.GetConnectionString()}");
+builder.Services.AddTransient<IDbConnection>((_) => new NpgsqlConnection(databaseConfig.GetConnectionString()));
 builder.Services.AddDbContext<CollabContext>(options =>
     options.UseNpgsql(databaseConfig.GetConnectionString()));
 
-
-
-// var useInMemory = builder.Configuration.GetValue<bool>("UseInMemoryDb");
-// if (useInMemory)
-// {
-//     builder.Services.AddDbContext<CollabContext>(opts =>
-//     {
-//         opts.UseInMemoryDatabase("CollabDb");
-//         opts.ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
-//     });
-// } else {
-//     builder.Services.AddDbContext<CollabContext>(opts =>
-//     {
-//         opts.UseNpgsql(
-//             @"Server=simulide-db;Port=5432;Database=simulide;User Id=simulide;Password=simulide;");
-//     });
-// }
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -68,12 +52,8 @@ static void ApplyMigrations(WebApplication webApplication)
     using var scope = webApplication.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
 
-    if (webApplication.Environment.IsProduction() || webApplication.Environment.IsStaging())
+    if (webApplication.Environment.EnvironmentName != "Test")
     {
         dbContext.Database.Migrate(); // Applies any pending migrations
-    }
-    else if (webApplication.Environment.IsDevelopment() || webApplication.Environment.IsEnvironment("Test"))
-    {
-        dbContext.Database.EnsureCreated(); // Creates DB if missing (useful for in-memory)
     }
 }

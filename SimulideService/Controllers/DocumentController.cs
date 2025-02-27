@@ -33,8 +33,8 @@ public class DocumentController(IDocumentService documentService, IMediator medi
         var result = await mediator.Send(new GetDocumentByIdQuery(id), cancellationToken);
         return result.Match<ServiceResponse<Document>>(
             error: e => ErrorResult(HttpStatusCode.NotFound, [
-                new ServiceError
-                    { Message = "Document not found" }
+                new ServiceError { Message = e.Message }
+                    //{ Message = "Document not found" }
             ]),
             success: doc => SuccessResult(HttpStatusCode.OK, doc))
             .ToActionResult();

@@ -1,40 +1,45 @@
 ﻿services:
-  simulideservice:
+  service:
     image: simulideservice
     build:
       context: .
       dockerfile: SimulideService/Dockerfile
     environment:
-      DB_HOST: simulide-db 
+      DB_HOST: postgres 
       DB_PORT: 5432
-      DB_NAME: simulide 
-      DB_USER: simulide-user
-      DB_PASSWORD: simulide-pw 
+      DB_NAME: simulide-db 
+      DB_USER: simulide
+      DB_PASSWORD: simulide-pw
       DB_POOLING: "true"
       DB_MIN_POOL_SIZE: "1"
       DB_MAX_POOL_SIZE: "20"
     depends_on:
-      - simulide-db
+      postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     networks:
       - simulide-net
-  simulide-db:
+
+  postgres:
     image: postgres:14.6-alpine
     restart: always
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: simulide
-      POSTGRES_USER: simulide-user
+      POSTGRES_DB: simulide-db
+      POSTGRES_USER: simulide 
       POSTGRES_PASSWORD: simulide-pw
     volumes:
-      - db:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql 
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 1s
     networks:
       - simulide-net
 volumes:
-  db:
-    driver: local
+  postgres-data:
 
 networks:
     simulide-net:

@@ -53,6 +53,7 @@ public class DatabaseConfig
         };
     }
 
-    public string GetConnectionString() =>
-        $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};Pooling={Pooling};MinPoolSize={MinPoolSize};MaxPoolSize={MaxPoolSize};";
+    public string GetConnectionString() => 
+        $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};" +
+        $"Pooling={Pooling};MinPoolSize={MinPoolSize};MaxPoolSize={MaxPoolSize};";
 }

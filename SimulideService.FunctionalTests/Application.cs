@@ -13,14 +13,14 @@ namespace SimulideService.FunctionalTests;
 public class Application
 {
     public static IAlbaHost? Host { get; private set; }
-    public static CollabContext? DbContext { get; private set; }
     public static PostgreSqlContainer? PostgreSqlContainer { get; private set; }
 
     [OneTimeSetUp]
     public async Task Initialize()
     {
         PostgreSqlContainer = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
+            .WithImage("postgres:14.6-alpine")
+            .WithHostname("localhost")
             .WithDatabase("simulide-db")
             .WithUsername("user")
             .WithPassword("password")
@@ -42,24 +42,34 @@ public class Application
                     options.UseNpgsql(testConnectionString));
                 services.AddScoped<IDbConnection>(sp => new NpgsqlConnection(testConnectionString));
                 services.AddScoped<IDocumentReadRepository, DocumentReadRepository>();
-                
-                using var scope = services.BuildServiceProvider().CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
-                dbContext.Database.Migrate();
             });
         });
-
-        // Create a DbContext for manual data setup in tests
         using var scope = Host.Services.CreateScope();
-        DbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
+        await dbContext.Database.MigrateAsync();
+        
+        // await EnsureTableExists(testConnectionString);
     }
 
     [OneTimeTearDown]
     public async Task TearDown()
     {
         await Host!.DisposeAsync();
-        await DbContext!.DisposeAsync();
         await PostgreSqlContainer!.StopAsync();
         await PostgreSqlContainer.DisposeAsync();
+    }
+    
+    private async Task EnsureTableExists(string connectionString)
+    {
+        await using var conn = new NpgsqlConnection(connectionString);
+        await conn.OpenAsync();
+
+        var checkTableCmd = new NpgsqlCommand("SELECT to_regclass('public.documents');", conn);
+        var result = await checkTableCmd.ExecuteScalarAsync();
+
+        if (result == DBNull.Value || result == null)
+        {
+            throw new InvalidOperationException("❌ ERROR: 'documents' table does not exist after migration!");
+        }
     }
 }
