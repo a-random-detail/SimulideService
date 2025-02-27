@@ -28,7 +28,6 @@ var configuration = builder.Configuration;
 if (builder.Environment.EnvironmentName == "Test")
     builder.Configuration.AddJsonFile("appsettings.Test.json", optional: false);
 var databaseConfig = DatabaseConfig.Load(configuration);
-Console.WriteLine($">>>>> current connection string: {databaseConfig.GetConnectionString()}");
 builder.Services.AddTransient<IDbConnection>((_) => new NpgsqlConnection(databaseConfig.GetConnectionString()));
 builder.Services.AddDbContext<CollabContext>(options =>
     options.UseNpgsql(databaseConfig.GetConnectionString()));

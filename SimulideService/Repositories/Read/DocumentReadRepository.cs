@@ -16,7 +16,6 @@ public class DocumentReadRepository(IDbConnection dbConnection, ILogger<Document
    
    public async Task<Either<Exception, Document>> GetDocumentByIdAsync(Guid documentId)
    {
-      logger.LogDebug($@">>>>> connection string: {dbConnection.ConnectionString}");
       try
       {
          var document = await dbConnection.QueryFirstOrDefaultAsync<Document>(GetDocumentByIdQuery, new { DocumentId = documentId });
