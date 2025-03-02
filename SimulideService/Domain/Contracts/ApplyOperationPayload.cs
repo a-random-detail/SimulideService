@@ -4,11 +4,12 @@ namespace SimulideService.Domain.Contracts;
 
 public class ApplyOperationPayload 
 {
-    public Guid DocumentId { get; set; }
-    public OperationType Type { get; set; }
-    public UInt32 Position { get; set; }
-    public String? Content { get; set; }
-    public UInt32 Version { get; set; }
-    public UInt32 Length { get; set; }
+    public required Guid DocumentId { get; init; }
+    public required OperationType Type { get; init; }
+    public uint Position { get; init; }
+    public string? Content { get; init; }
+    public uint Version { get; init; }
+    public uint Length { get; init; }
+    
     public DateTime CreatedAt { get; set; }
 }

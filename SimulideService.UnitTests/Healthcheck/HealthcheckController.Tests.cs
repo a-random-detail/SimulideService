@@ -34,7 +34,7 @@ public class HealthcheckController_Tests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.StatusCode, Is.EqualTo((int)HttpStatusCode.OK));
         var payload = result.Value as ServiceResponse<ServiceStatus>;
-        Assert.IsTrue(payload!.Success);
+        Assert.IsTrue(payload!.IsSuccessful);
         Assert.IsTrue(payload.Data!.DatabaseIsHealthy);
     }
     
@@ -51,7 +51,7 @@ public class HealthcheckController_Tests
         
         Assert.That(response.StatusCode, Is.EqualTo((int)HttpStatusCode.BadGateway));
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Success, Is.False);
+        Assert.That(result.IsSuccessful, Is.False);
         Assert.That(result.Data, Is.Null);
         Assert.That(result.Errors!.First().Message, Is.EqualTo("The database is not healthy"));
     }

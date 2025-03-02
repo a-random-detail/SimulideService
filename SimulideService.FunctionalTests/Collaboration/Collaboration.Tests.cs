@@ -1,6 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.AspNetCore.TestHost;
+using SimulideService.Domain;
 using SimulideService.Domain.Contracts;
 using SimulideService.Domain.Data;
 using SimulideService.Response;
@@ -40,11 +40,17 @@ public class CollaborationTests
       var client1 = new HubConnectionBuilder().WithUrl(_hubUrl).Build();
       var client2 = new HubConnectionBuilder().WithUrl(_hubUrl).Build();
 
-      List<Operation> receivedMessagesClient1 = [];
-      List<Operation> receivedMessagesClient2 = [];
+      List<Operation> client1Operations = [];
+      List<Operation> client2Operations = [];
       
-      client1.On<Operation>("ReceiveOperation", operation => receivedMessagesClient1.Add(operation));
-      client2.On<Operation>("ReceiveOperation", operation => receivedMessagesClient1.Add(operation));
+      List<CollabUserEvent> client1Events = [];
+      List<CollabUserEvent> client2Events = [];
+      
+      client1.On<Operation>("ReceiveOperation", operation => client1Operations.Add(operation));
+      client2.On<Operation>("ReceiveOperation", operation => client2Operations.Add(operation));
+      
+      client1.On<CollabUserEvent>("PartyChanged", userEvent => client1Events.Add(userEvent));
+      client1.On<CollabUserEvent>("PartyChanged", userEvent => client2Events.Add(userEvent));
 
       await client1.StartAsync();
       await client2.StartAsync();
@@ -54,8 +60,19 @@ public class CollaborationTests
       var client2Connect = await client2.InvokeAsync<ServiceResponse<CollabSessionStatus>>(
          "JoinDocumentGroup", _documentId);
       
-      Assert.That(client1Connect.Success, Is.True);
-      Assert.That(client2Connect.Success, Is.True);
+      Assert.That(client1Connect.IsSuccessful, Is.True);
+      Assert.That(client2Connect.IsSuccessful, Is.True);
+      
+      await Task.Delay(500);
+      
+      Assert.That(client1Events.Count, Is.EqualTo(2));
+      Assert.That(client2Events.Count, Is.EqualTo(2));
+      
+      Assert.That(client1Events.Find(x => x.ConnectionId == client1Connect.Data?.ConnectionId), Is.Not.Null);
+      Assert.That(client1Events.Find(x => x.ConnectionId == client2Connect.Data?.ConnectionId), Is.Not.Null);
+
+      Assert.That(client2Events.Find(x => x.ConnectionId == client1Connect.Data?.ConnectionId), Is.Not.Null);
+      Assert.That(client2Events.Find(x => x.ConnectionId == client2Connect.Data?.ConnectionId), Is.Not.Null);
 
       var operation1 = new ApplyOperationPayload 
       {
@@ -71,8 +88,8 @@ public class CollaborationTests
 
       await Task.Delay(500);
       
-      Assert.Contains(operation1, receivedMessagesClient2);
-      Assert.Contains(operation1, receivedMessagesClient1);
+      Assert.Contains(operation1, client2Operations);
+      Assert.Contains(operation1, client1Operations);
 
       await client1.StopAsync();
       await client2.StopAsync();
@@ -88,7 +105,7 @@ public class CollaborationTests
 
       var response = await client.InvokeAsync<ServiceResponse<CollabSessionStatus>>("JoinDocumentGroup", invalidDocumentId);
       
-      Assert.That(response.Success, Is.False);
+      Assert.That(response.IsSuccessful, Is.False);
       Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
       Assert.That(response.Data, Is.Null);
       Assert.That(response.Errors, Is.Not.Null);
@@ -109,7 +126,7 @@ public class CollaborationTests
       List<Operation> clientMessages = [];
       
       client.On<Operation>("ReceiveOperation", operation => clientMessages.Add(operation));
-      Assert.That(clientConnect.Success, Is.True);
+      Assert.That(clientConnect.IsSuccessful, Is.True);
 
       var operation1 = new ApplyOperationPayload 
       {
@@ -125,7 +142,7 @@ public class CollaborationTests
 
       await Task.Delay(500);
       
-      Assert.That(response.Success, Is.False);
+      Assert.That(response.IsSuccessful, Is.False);
       Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
       Assert.That(response.Data, Is.Null);
       Assert.That(response.Errors, Is.Not.Null);

@@ -8,18 +8,17 @@ namespace SimulideService.Services;
 
 public interface IOperationService 
 {
-   Task<Either<List<Exception>, Operation>> ApplyOperation(ApplyOperationPayload request, Document document);
+   Task<Either<List<Exception>, Operation>> ApplyOperationAsync(ApplyOperationPayload request, Document document, CancellationToken cancellationToken);
 }
 
 public class OperationService(
    IOperationWriteRepository operationWriteRepository, 
    ITransactionManager<CollabContext> transactionManager): IOperationService 
 {
-   public async Task<Either<List<Exception>, Operation>> ApplyOperation(ApplyOperationPayload request, Document document)
+   public async Task<Either<List<Exception>, Operation>> ApplyOperationAsync(ApplyOperationPayload request, Document document, CancellationToken cancellationToken)
    {
-      
       return await ApplyOperationPayloadValidator.FieldsAreValid(request, document)
-         .Map(Operation.FromRequest)
-         .MapAsync(document => transactionManager.ExecuteInTransaction(async (dbContext) => await operationWriteRepository.CreateAsync(dbContext, document)));
+         .Bind(Operation.FromRequest)
+         .BindAsync(operation => transactionManager.ExecuteInTransaction(async (dbContext) => await operationWriteRepository.CreateAsync(dbContext, operation)));
    }
 }

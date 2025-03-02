@@ -55,7 +55,7 @@ public class PostDocument
         
         var payload = response.ReadAsJson<ServiceResponse<Domain.Data.Document>>();
         
-        Assert.That(payload.Success, Is.False);
+        Assert.That(payload.IsSuccessful, Is.False);
         Assert.That(payload.Errors, Is.Not.Null);
         Assert.That(payload.Errors.Count, Is.EqualTo(1));
         Assert.That(payload.Errors[0].Message, Is.EqualTo("Name is required"));
@@ -95,7 +95,7 @@ public class PostDocument
         
         var payload = response.ReadAsJson<ServiceResponse<Domain.Data.Document>>();
         
-        Assert.That(payload.Success, Is.False);
+        Assert.That(payload.IsSuccessful, Is.False);
         Assert.That(payload.Errors, Is.Not.Null);
         Assert.That(payload.Errors.Count, Is.EqualTo(1));
         Assert.That(payload.Errors[0].Message, Is.EqualTo("An error occurred while processing the request."));
