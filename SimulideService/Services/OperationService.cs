@@ -12,13 +12,18 @@ public interface IOperationService
 }
 
 public class OperationService(
-   IOperationWriteRepository operationWriteRepository, 
-   ITransactionManager<CollabContext> transactionManager): IOperationService 
+   IOperationWriteRepository operationWriteRepository,
+   ITransactionManager<CollabContext> transactionManager) : IOperationService
 {
    public async Task<Either<List<Exception>, Operation>> ApplyOperationAsync(ApplyOperationPayload request, Document document)
    {
       return await ApplyOperationPayloadValidator.FieldsAreValid(request, document)
          .Bind(Operation.FromRequest)
-         .BindAsync(operation => transactionManager.ExecuteInTransaction(async (dbContext) => await operationWriteRepository.CreateAsync(dbContext, operation)));
+         .BindAsync(operation => transactionManager.ExecuteInTransaction(async (dbContext) =>
+         {
+            var appliedOperation = await operationWriteRepository.CreateAsync(dbContext, operation);
+            await operationWriteRepository.ApplyOperationToDocument(dbContext, appliedOperation, document);
+            return appliedOperation;
+         }));
    }
 }

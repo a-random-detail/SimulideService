@@ -18,7 +18,7 @@ namespace SimulideService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: true),
-                    Version = table.Column<long>(type: "bigint", nullable: false),
+                    Version = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -34,10 +34,10 @@ namespace SimulideService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     DocumentId = table.Column<Guid>(type: "uuid", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
-                    Position = table.Column<long>(type: "bigint", nullable: false),
+                    Position = table.Column<int>(type: "integer", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: true),
-                    Version = table.Column<long>(type: "bigint", nullable: false),
-                    Length = table.Column<long>(type: "bigint", nullable: false),
+                    Version = table.Column<int>(type: "integer", nullable: false),
+                    Length = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>

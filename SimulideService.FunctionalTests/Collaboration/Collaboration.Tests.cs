@@ -11,7 +11,7 @@ namespace SimulideService.FunctionalTests.Collaboration;
 public class CollaborationTests
 {
    private string _hubUrl; 
-   private Guid _documentId;
+   private Domain.Data.Document _createdDocument;
    
    
    [SetUp]
@@ -29,7 +29,7 @@ public class CollaborationTests
          
          var responsePayload = response.ReadAsJson<ServiceResponse<Domain.Data.Document>>();
          Assert.That(responsePayload.Data, Is.InstanceOf<Domain.Data.Document>());
-         _documentId = responsePayload.Data.Id;
+         _createdDocument = responsePayload.Data;
          
          _hubUrl = "ws://localhost:8080/collaboration";
    }
@@ -50,33 +50,35 @@ public class CollaborationTests
       client2.On<Operation>("ReceiveOperation", operation => client2Operations.Add(operation));
       
       client1.On<CollabUserEvent>("PartyChanged", userEvent => client1Events.Add(userEvent));
-      client1.On<CollabUserEvent>("PartyChanged", userEvent => client2Events.Add(userEvent));
+      client2.On<CollabUserEvent>("PartyChanged", userEvent => client2Events.Add(userEvent));
 
       await client1.StartAsync();
       await client2.StartAsync();
       
       var client1Connect = await client1.InvokeAsync<ServiceResponse<CollabSessionStatus>>(
-         "JoinDocumentGroup", _documentId);
-      var client2Connect = await client2.InvokeAsync<ServiceResponse<CollabSessionStatus>>(
-         "JoinDocumentGroup", _documentId);
+         "JoinDocumentGroup", 
+         _createdDocument.Id);
       
       Assert.That(client1Connect.IsSuccessful, Is.True);
+
+      var client2Connect = await client2.InvokeAsync<ServiceResponse<CollabSessionStatus>>(
+         "JoinDocumentGroup", 
+         _createdDocument.Id);
       Assert.That(client2Connect.IsSuccessful, Is.True);
-      
+
       await Task.Delay(500);
       
       Assert.That(client1Events.Count, Is.EqualTo(2));
-      Assert.That(client2Events.Count, Is.EqualTo(2));
+      Assert.That(client2Events.Count, Is.EqualTo(1));
       
       Assert.That(client1Events.Find(x => x.ConnectionId == client1Connect.Data?.ConnectionId), Is.Not.Null);
       Assert.That(client1Events.Find(x => x.ConnectionId == client2Connect.Data?.ConnectionId), Is.Not.Null);
 
-      Assert.That(client2Events.Find(x => x.ConnectionId == client1Connect.Data?.ConnectionId), Is.Not.Null);
       Assert.That(client2Events.Find(x => x.ConnectionId == client2Connect.Data?.ConnectionId), Is.Not.Null);
 
       var operation1 = new ApplyOperationPayload 
       {
-         DocumentId = _documentId,
+         DocumentId = _createdDocument.Id,
          Type = OperationType.Insert,
          Position = 0,
          Content = "Hello, World!",
@@ -103,7 +105,73 @@ public class CollaborationTests
       await client1.StopAsync();
       await client2.StopAsync();
    }
-   
+
+   [Test]
+   public async Task ApplyDocument_UpdatesDocumentContentAndVersion() 
+   {
+      var client1 = CreateHubConnection(); 
+
+      List<Operation> client1Operations = [];
+      
+      List<CollabUserEvent> client1Events = [];
+      
+      client1.On<Operation>("ReceiveOperation", operation => client1Operations.Add(operation));
+      
+      client1.On<CollabUserEvent>("PartyChanged", userEvent => client1Events.Add(userEvent));
+
+      await client1.StartAsync();
+      
+      var client1Connect = await client1.InvokeAsync<ServiceResponse<CollabSessionStatus>>(
+         "JoinDocumentGroup", _createdDocument.Id);
+      
+      Assert.That(client1Connect.IsSuccessful, Is.True);
+      
+      await Task.Delay(500);
+      
+      Assert.That(client1Events.Count, Is.EqualTo(1));
+      Assert.That(client1Events.Find(x => x.ConnectionId == client1Connect.Data?.ConnectionId), Is.Not.Null);
+
+
+      var operation1 = new ApplyOperationPayload 
+      {
+         DocumentId = _createdDocument.Id,
+         Type = OperationType.Insert,
+         Position = 0,
+         Content = "Hello, World!",
+         Version = 1,
+         Length = 13
+      };
+
+      var expected = Operation.FromRequest(operation1);
+
+      await client1.InvokeAsync("ApplyOperation", operation1);
+
+      await Task.Delay(500);
+      
+      Assert.That(client1Operations.Count, Is.EqualTo(1));
+      Assert.That(client1Operations[0].Position, Is.EqualTo(expected.Position));
+      Assert.That(client1Operations[0].Content, Is.EqualTo(expected.Content));
+      Assert.That(client1Operations[0].Version, Is.EqualTo(expected.Version));
+
+      await client1.StopAsync();
+
+      var response = await Application.Host!.Scenario(void (_) =>
+      {
+         _.Get.Url($"/documents/{_createdDocument.Id}");
+         _.StatusCodeShouldBe(200); // Create
+      });
+
+      var responsePayload = response.ReadAsJson<ServiceResponse<Domain.Data.Document>>();
+      Assert.That(responsePayload.Data, Is.InstanceOf<Domain.Data.Document>());
+      var document = responsePayload.Data;
+      Assert.That(document.Id, Is.EqualTo(_createdDocument.Id));
+      Assert.That(document.Content, Is.EqualTo($"{expected.Content}{_createdDocument.Content}"));
+      Assert.That(document.Version, Is.EqualTo(_createdDocument.Version + 1));
+      Assert.That(document.CreatedAt, Is.EqualTo(_createdDocument.CreatedAt));
+      Assert.That(document.UpdatedAt, Is.GreaterThan(_createdDocument.UpdatedAt));
+      Assert.That(document.UpdatedAt, Is.GreaterThan(expected.CreatedAt));
+   }
+
    [Test] 
    public async Task JoiningNonExistentDocument_ReturnsNotFound()
    {
@@ -130,7 +198,7 @@ public class CollaborationTests
 
       await client.StartAsync();
 
-      var clientConnect = await client.InvokeAsync<ServiceResponse<CollabSessionStatus>>("JoinDocumentGroup", _documentId);
+      var clientConnect = await client.InvokeAsync<ServiceResponse<CollabSessionStatus>>("JoinDocumentGroup", _createdDocument.Id);
       
       List<Operation> clientMessages = [];
       
@@ -139,7 +207,7 @@ public class CollaborationTests
 
       var operation1 = new ApplyOperationPayload 
       {
-         DocumentId = _documentId,
+         DocumentId = _createdDocument.Id,
          Type = OperationType.Insert,
          Position = 0,
          Content = "Hello, World!",

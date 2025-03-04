@@ -12,7 +12,7 @@ using SimulideService.Domain.Data;
 namespace SimulideService.Migrations
 {
     [DbContext(typeof(CollabContext))]
-    [Migration("20250224052149_InitialTableCreation")]
+    [Migration("20250304162837_InitialTableCreation")]
     partial class InitialTableCreation
     {
         /// <inheritdoc />
@@ -44,8 +44,8 @@ namespace SimulideService.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -67,17 +67,17 @@ namespace SimulideService.Migrations
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("Length")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Length")
+                        .HasColumnType("integer");
 
-                    b.Property<long>("Position")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
