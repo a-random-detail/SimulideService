@@ -5,8 +5,8 @@ namespace SimulideService.FunctionalTests.Document;
 
 public class ErrorDocumentReadRepository: IDocumentReadRepository
 {
-    public Task<Either<Exception, Domain.Data.Document>> GetDocumentByIdAsync(Guid documentId)
+    public Task<Either<List<Exception>, Domain.Data.Document>> GetDocumentByIdAsync(Guid documentId)
     {
-        return Task.FromResult(Either<Exception, Domain.Data.Document>.Left(new Exception("womp womp")));
+        return Task.FromResult(Either<List<Exception>, Domain.Data.Document>.Left([new Exception("womp womp")]));
     }
 }

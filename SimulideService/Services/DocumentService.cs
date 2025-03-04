@@ -18,7 +18,7 @@ public class DocumentService(
    public async Task<Either<List<Exception>, Document>> CreateDocumentAsync(PostDocumentRequest request)
    {
       return await CreateDocumentRequestValidator.FieldsAreValid(request)
-         .Map(Document.FromRequest)
-         .MapAsync(document => transactionManager.ExecuteInTransaction(async (dbContext) => await documentWriteRepository.CreateAsync(dbContext, document)));
+         .Bind(Document.FromRequest)
+         .BindAsync(document => transactionManager.ExecuteInTransaction(async (dbContext) => await documentWriteRepository.CreateAsync(dbContext, document)));
    }
 }

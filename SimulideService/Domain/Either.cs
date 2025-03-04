@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace SimulideService.Domain;
 
 public class Either<TL, TR>
@@ -23,20 +25,26 @@ public class Either<TL, TR>
         _right = right;
         _isLeft = false;
     }
+    
+    public Either<TL, TResult> Bind<TResult>(Func<TR, TResult> func)
+    {
+        return _isLeft ? _left : func(_right);
+    }
+    
+    public async Task<Either<TL, TResult>> BindAsync<TResult>(Func<TR, Task<Either<TL, TResult>>> func)
+    {
+        return _isLeft ? Either<TL, TResult>.Left(_left) : await func(_right);
+    }
 
     public T Match<T>(Func<TL, T> error, Func<TR, T> success)
     {
         return _isLeft ? error(_left) : success(_right);
     }
     
-    public async Task<Either<TL, TResult>> MapAsync<TResult>(Func<TR, Task<Either<TL, TResult>>> func)
-    {
-        return _isLeft ? _left : await func(_right);
-    }
-    
-    public Either<TL, TResult> Map<TResult>(Func<TR, TResult> func)
-    {
-        return _isLeft ? _left : func(_right);
-    }
-    
+    public async Task<TResult> MatchAsync<TResult>(
+        Func<TL, Task<TResult>> error, 
+        Func<TR, Task<TResult>> success)
+     {
+         return _isLeft ? await error(_left) : await success(_right);
+     }
 }

@@ -1,6 +1,7 @@
 using System.Net;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SimulideService.Domain;
 using SimulideService.Domain.Contracts;
 using SimulideService.Domain.Data;
 using SimulideService.Repositories;
@@ -30,23 +31,23 @@ public class DocumentController(IDocumentService documentService, IMediator medi
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetDocumentByIdQuery(id), cancellationToken);
+        var result = await mediator.SendToEitherAsync(new GetDocumentByIdQuery(id), 
+            () => new KeyNotFoundException($"Document with id {id} not found."),
+            cancellationToken);
         return result.Match<ServiceResponse<Document>>(
-            error: e => HandleDocumentErrors([e]),
+            error: HandleDocumentErrors,
             success: doc => SuccessResult(HttpStatusCode.OK, doc))
             .ToActionResult();
     }
     
     private static ServiceResponse<Document> HandleDocumentErrors(List<Exception> exceptions)
     {
-        if (exceptions.Any(x => x is DocumentValidationException))
-            return ErrorResult(HttpStatusCode.BadRequest,
-                exceptions.Select(ex => new ServiceError { Message = ex.Message }).ToList());
-        if (exceptions.Any(x => x is KeyNotFoundException)) 
-            return ErrorResult(HttpStatusCode.NotFound, [ new ServiceError { Message = exceptions.First().Message }]);
-       
-        return ErrorResult(HttpStatusCode.InternalServerError,
-                exceptions.Select(ex => new ServiceError { Message = "An error occurred while processing the request." }).ToList());
+        
+        if (exceptions.Any(x => x is KeyNotFoundException))
+            return ErrorResult(HttpStatusCode.NotFound, exceptions.Select(ex => new ServiceError { Message = ex.Message }).ToList());
+        
+        return ErrorResult(exceptions.Any(x => x is DocumentValidationException) ? HttpStatusCode.BadRequest : HttpStatusCode.InternalServerError, exceptions);
+
     }
     
 }

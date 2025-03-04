@@ -13,6 +13,7 @@ namespace SimulideService.FunctionalTests;
 public class Application
 {
     public static IAlbaHost? Host { get; private set; }
+    public static string BaseUrl { get; } = "http://localhost:8080";
     public static PostgreSqlContainer? PostgreSqlContainer { get; private set; }
 
     [OneTimeSetUp]
@@ -31,6 +32,7 @@ public class Application
         var testConnectionString = PostgreSqlContainer.GetConnectionString();
         Host = await AlbaHost.For<Program>(x =>
         {
+            x.UseUrls(BaseUrl);
             x.UseEnvironment("Test");
 
             x.ConfigureServices((context, services) =>

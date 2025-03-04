@@ -2,13 +2,20 @@ using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using SimulideService;
+using SimulideService.Controllers;
 using SimulideService.Domain.Data;
 using SimulideService.Repositories;
 using SimulideService.Repositories.Queries;
 using SimulideService.Services;
+using WebSocketManager = SimulideService.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -18,12 +25,32 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<DatabaseConfig>();
 builder.Services.AddSingleton<NpgsqlConnectionFactory>();
-builder.Services.AddScoped<IDocumentReadRepository, DocumentReadRepository>();
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
+
+//Read layer - Dapper
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetDocumentByIdQueryHandler).Assembly));
+builder.Services.AddScoped<IDocumentReadRepository, DocumentReadRepository>();
+
+//Write layer - EF Core
+builder.Services.AddScoped(typeof(ITransactionManager<>), typeof(TransactionManager<>));
+builder.Services.AddScoped<IOperationWriteRepository, OperationWriteRepository>();
+builder.Services.AddScoped<IOperationService, OperationService>();
 builder.Services.AddScoped<IDocumentWriteRepository, DocumentWriteRepository>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetDocumentByIdQueryHandler).Assembly));
-builder.Services.AddScoped(typeof(ITransactionManager<>), typeof(TransactionManager<>));
+
+// signalr
+builder.Services.AddSingleton<IWebSocketManager, WebSocketManager>();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.SupportedProtocols.Add("json");
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080); 
+});
+
+// All database connections
 var configuration = builder.Configuration;
 if (builder.Environment.EnvironmentName == "Test")
     builder.Configuration.AddJsonFile("appsettings.Test.json", optional: false);
@@ -41,9 +68,11 @@ if (app.Environment.IsDevelopment())
 }
 
 ApplyMigrations(app);
-app.UseHttpsRedirection();
+
 app.UseAuthorization();
 app.MapControllers();
+app.UseWebSockets();
+app.MapHub<CollaborationHub>("/collaboration");
 
 app.Run();
 return;
@@ -55,6 +84,6 @@ static void ApplyMigrations(WebApplication webApplication)
 
     if (webApplication.Environment.EnvironmentName != "Test")
     {
-        dbContext.Database.Migrate(); // Applies any pending migrations
+        dbContext.Database.Migrate(); 
     }
 }

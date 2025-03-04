@@ -1,8 +1,9 @@
 namespace SimulideService.Response;
-
 public enum ServiceLayer
 {
-    Service,
-    Repository,
-    Controller
+    Application,
+    Validation,
+    Domain,
+    Database,
+    Unknown
 }
