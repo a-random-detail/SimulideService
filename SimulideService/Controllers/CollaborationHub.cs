@@ -20,26 +20,13 @@ public class CollaborationHub(
     ILogger<CollaborationHub> logger): Hub
 {
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
-    {
-        logger.LogDebug($"Client disconnected: {Context.ConnectionId}");
-        Console.WriteLine($"Client disconnected: {Context.ConnectionId}");
-        await base.OnDisconnectedAsync(exception);
-    }
-
-    public override async Task OnConnectedAsync()
-    {
-        logger.LogDebug($"Client connected: {Context.ConnectionId}");
-        Console.WriteLine($"Client connected: {Context.ConnectionId}");
-        await base.OnConnectedAsync();
-    }
-
     [HubMethodName("ApplyOperation")]
     public async Task<ServiceResponse<Operation>> ApplyOperation(ApplyOperationPayload request)
     {
-        return await (await mediator
+        var documentResult = await mediator
                 .SendToEitherAsync(new GetDocumentByIdQuery(request.DocumentId),
-                    () => new KeyNotFoundException($"Document with id {request.DocumentId} not found.")))
+                    () => new KeyNotFoundException($"Document with id {request.DocumentId} not found."));
+        return await documentResult 
             .BindAsync(doc => operationService.ApplyOperationAsync(request, doc))
             .BindAsync(op => webSocketManager.BroadcastOperation(op, request.DocumentId))
             .MatchAsync<List<Exception>, Operation, ServiceResponse<Operation>>(
@@ -47,7 +34,6 @@ public class CollaborationHub(
                 success: (operation) => Task.FromResult(SuccessResult(HttpStatusCode.OK, operation)));
 
     }
-
 
     [HubMethodName("JoinDocumentGroup")]
     public async Task<ServiceResponse<CollabUserEvent>> JoinDocumentGroup(Guid documentId)
@@ -59,7 +45,6 @@ public class CollaborationHub(
                 error: exceptions => Task.FromResult(HandleUserErrors(exceptions)),
                 success: evt => Task.FromResult(SuccessResult(HttpStatusCode.OK, evt)));
     }
-
 
     [HubMethodName("LeaveDocumentGroup")]
     public async Task<ServiceResponse<CollabUserEvent>> LeaveDocumentGroup(Guid documentId, CancellationToken cancellationToken = default)
