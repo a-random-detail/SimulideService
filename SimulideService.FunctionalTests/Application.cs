@@ -14,6 +14,7 @@ public class Application
 {
     public static IAlbaHost? Host { get; private set; }
     public static string BaseUrl { get; } = "http://localhost:8080";
+    public static string CollaborationHubUrl { get; } = $"{BaseUrl}/collaboration";
     public static PostgreSqlContainer? PostgreSqlContainer { get; private set; }
 
     [OneTimeSetUp]
@@ -69,7 +70,7 @@ public class Application
 
         if (result == DBNull.Value || result == null)
         {
-            throw new InvalidOperationException("❌ ERROR: 'documents' table does not exist after migration!");
+            throw new InvalidOperationException("ERROR: 'documents' table does not exist after migration!");
         }
     }
 }

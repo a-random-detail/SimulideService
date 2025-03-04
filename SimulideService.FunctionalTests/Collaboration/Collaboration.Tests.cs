@@ -10,7 +10,6 @@ namespace SimulideService.FunctionalTests.Collaboration;
 [TestFixture]
 public class CollaborationTests
 {
-   private string _hubUrl; 
    private Domain.Data.Document _createdDocument;
    
    
@@ -31,7 +30,6 @@ public class CollaborationTests
          Assert.That(responsePayload.Data, Is.InstanceOf<Domain.Data.Document>());
          _createdDocument = responsePayload.Data;
          
-         _hubUrl = "ws://localhost:8080/collaboration";
    }
    
    [Test]
@@ -46,11 +44,11 @@ public class CollaborationTests
       List<CollabUserEvent> client1Events = [];
       List<CollabUserEvent> client2Events = [];
       
-      client1.On<Operation>("ReceiveOperation", operation => client1Operations.Add(operation));
-      client2.On<Operation>("ReceiveOperation", operation => client2Operations.Add(operation));
+      client1.On<Operation>("ReceiveOperation", client1Operations.Add);
+      client2.On<Operation>("ReceiveOperation", client2Operations.Add);
       
-      client1.On<CollabUserEvent>("PartyChanged", userEvent => client1Events.Add(userEvent));
-      client2.On<CollabUserEvent>("PartyChanged", userEvent => client2Events.Add(userEvent));
+      client1.On<CollabUserEvent>("PartyChanged", client1Events.Add);
+      client2.On<CollabUserEvent>("PartyChanged", client2Events.Add);
 
       await client1.StartAsync();
       await client2.StartAsync();
@@ -115,9 +113,9 @@ public class CollaborationTests
       
       List<CollabUserEvent> client1Events = [];
       
-      client1.On<Operation>("ReceiveOperation", operation => client1Operations.Add(operation));
+      client1.On<Operation>("ReceiveOperation", client1Operations.Add);
       
-      client1.On<CollabUserEvent>("PartyChanged", userEvent => client1Events.Add(userEvent));
+      client1.On<CollabUserEvent>("PartyChanged", client1Events.Add);
 
       await client1.StartAsync();
       
@@ -233,7 +231,7 @@ public class CollaborationTests
    private HubConnection CreateHubConnection()
    {
       return new HubConnectionBuilder()
-         .WithUrl("http://localhost:8080/collaboration",
+         .WithUrl(Application.CollaborationHubUrl,
          o => o.HttpMessageHandlerFactory = _ => Application.Host!.Server.CreateHandler())
          .Build();
    }

@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="9.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="9.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Design" Version="9.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Tools" Version="9.0.2" />
+    <PackageReference Update="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+  </ItemGroup>
+</Project>
