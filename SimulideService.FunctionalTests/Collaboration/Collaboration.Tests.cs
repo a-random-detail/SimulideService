@@ -31,14 +31,14 @@ public class CollaborationTests
          Assert.That(responsePayload.Data, Is.InstanceOf<Domain.Data.Document>());
          _documentId = responsePayload.Data.Id;
          
-         _hubUrl = $"{Application.BaseUrl}/ws/collaboration";
+         _hubUrl = "ws://localhost:8080/collaboration";
    }
    
    [Test]
    public async Task MultipleClients_CanJoinDocumentGroup_AndReceiveMessages()
    {
-      var client1 = new HubConnectionBuilder().WithUrl(_hubUrl).Build();
-      var client2 = new HubConnectionBuilder().WithUrl(_hubUrl).Build();
+      var client1 = CreateHubConnection(); 
+      var client2 = CreateHubConnection(); 
 
       List<Operation> client1Operations = [];
       List<Operation> client2Operations = [];
@@ -84,12 +84,21 @@ public class CollaborationTests
          Length = 13
       };
 
+      var expected = Operation.FromRequest(operation1);
+
       await client1.InvokeAsync("ApplyOperation", operation1);
 
       await Task.Delay(500);
       
-      Assert.Contains(operation1, client2Operations);
-      Assert.Contains(operation1, client1Operations);
+      Assert.That(client1Operations.Count, Is.EqualTo(1));
+      Assert.That(client1Operations[0].Position, Is.EqualTo(expected.Position));
+      Assert.That(client1Operations[0].Content, Is.EqualTo(expected.Content));
+      Assert.That(client1Operations[0].Version, Is.EqualTo(expected.Version));
+
+      Assert.That(client2Operations.Count, Is.EqualTo(1));
+      Assert.That(client2Operations[0].Position, Is.EqualTo(expected.Position));
+      Assert.That(client2Operations[0].Content, Is.EqualTo(expected.Content));
+      Assert.That(client2Operations[0].Version, Is.EqualTo(expected.Version));
 
       await client1.StopAsync();
       await client2.StopAsync();
@@ -98,7 +107,7 @@ public class CollaborationTests
    [Test] 
    public async Task JoiningNonExistentDocument_ReturnsNotFound()
    {
-      var client = new HubConnectionBuilder().WithUrl(_hubUrl).Build();
+      var client = CreateHubConnection(); 
       var invalidDocumentId = Guid.NewGuid().ToString();
 
       await client.StartAsync();
@@ -109,7 +118,7 @@ public class CollaborationTests
       Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
       Assert.That(response.Data, Is.Null);
       Assert.That(response.Errors, Is.Not.Null);
-      Assert.That(response.Errors.First().Message, Is.EqualTo($"Document with id {invalidDocumentId} not found"));;
+      Assert.That(response.Errors.First().Message, Is.EqualTo($"Document with id {invalidDocumentId} not found."));;
 
       await client.StopAsync();
    }
@@ -117,7 +126,7 @@ public class CollaborationTests
    [Test] 
    public async Task ApplyOperation_ReturnsBadRequest_WithWrongVersionNumber()
    {
-      var client = new HubConnectionBuilder().WithUrl(_hubUrl).Build();
+      var client = CreateHubConnection(); 
 
       await client.StartAsync();
 
@@ -146,11 +155,19 @@ public class CollaborationTests
       Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
       Assert.That(response.Data, Is.Null);
       Assert.That(response.Errors, Is.Not.Null);
-      Assert.That(response.Errors.First().Message, Is.EqualTo($"Operation out of sync with document {_documentId}."));;
+      Assert.That(response.Errors.First().Message, Is.EqualTo("Version is invalid, please try again."));;
 
       Assert.That(clientMessages, Is.Empty);
       
       await client.StopAsync();
+   }
+
+   private HubConnection CreateHubConnection()
+   {
+      return new HubConnectionBuilder()
+         .WithUrl("http://localhost:8080/collaboration",
+         o => o.HttpMessageHandlerFactory = _ => Application.Host!.Server.CreateHandler())
+         .Build();
    }
    
    

@@ -13,7 +13,7 @@ namespace SimulideService.FunctionalTests;
 public class Application
 {
     public static IAlbaHost? Host { get; private set; }
-    public static string BaseUrl { get; } = "http://localhost:5000";
+    public static string BaseUrl { get; } = "http://localhost:8080";
     public static PostgreSqlContainer? PostgreSqlContainer { get; private set; }
 
     [OneTimeSetUp]

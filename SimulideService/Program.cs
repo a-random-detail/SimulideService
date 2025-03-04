@@ -11,6 +11,11 @@ using WebSocketManager = SimulideService.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -35,7 +40,15 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 // signalr
 builder.Services.AddSingleton<IWebSocketManager, WebSocketManager>();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.SupportedProtocols.Add("json");
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080); 
+});
 
 // All database connections
 var configuration = builder.Configuration;
@@ -55,10 +68,11 @@ if (app.Environment.IsDevelopment())
 }
 
 ApplyMigrations(app);
-app.UseHttpsRedirection();
+
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<CollaborationHub>("ws/collaboration");
+app.UseWebSockets();
+app.MapHub<CollaborationHub>("/collaboration");
 
 app.Run();
 return;
@@ -70,6 +84,6 @@ static void ApplyMigrations(WebApplication webApplication)
 
     if (webApplication.Environment.EnvironmentName != "Test")
     {
-        dbContext.Database.Migrate(); // Applies any pending migrations
+        dbContext.Database.Migrate(); 
     }
 }

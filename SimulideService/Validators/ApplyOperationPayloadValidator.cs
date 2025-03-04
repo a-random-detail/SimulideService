@@ -13,21 +13,21 @@ public static class ApplyOperationPayloadValidator
 
         if (request.DocumentId == Guid.Empty || document is null || request.DocumentId != document.Id)
         {
-            errors.Add(new Exception("DocumentId is missing or invalid."));
+            errors.Add(new OperationValidationException("DocumentId is missing or invalid."));
         }
 
         if (document != null && request.Version != document.Version)
         {
-            errors.Add(new Exception("Version is invalid, please try again."));
+            errors.Add(new OperationValidationException("Version is invalid, please try again."));
         }
 
         if (request.Type == OperationType.None)
         {
-            errors.Add(new Exception("Operation type is required."));
+            errors.Add(new OperationValidationException("Operation type is required."));
         }
         if (request.Length == 0)
         {
-            errors.Add(new Exception("Length is required."));
+            errors.Add(new OperationValidationException("Length is required."));
         }
 
         return errors.Any()
