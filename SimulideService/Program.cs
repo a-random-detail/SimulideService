@@ -50,6 +50,21 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(8080); 
 });
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowLocalhost", builder =>
+        {
+            builder
+            .WithOrigins("http://127.0.0.1:5173")
+            .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+    });
+}
+
 // All database connections
 var configuration = builder.Configuration;
 if (builder.Environment.EnvironmentName == "Test")
@@ -73,6 +88,11 @@ app.UseAuthorization();
 app.MapControllers();
 app.UseWebSockets();
 app.MapHub<CollaborationHub>("/collaboration");
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("AllowLocalhost");
+}
 
 app.Run();
 return;
