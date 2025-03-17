@@ -23,9 +23,11 @@ public class CollaborationHub(
     [HubMethodName("ApplyOperation")]
     public async Task<ServiceResponse<Operation>> ApplyOperation(ApplyOperationPayload request)
     {
+        logger.LogInformation($"Request received to apply operation of type {request.Type} with content {request.Content} to document {request.DocumentId}.");
         var documentResult = await mediator
                 .SendToEitherAsync(new GetDocumentByIdQuery(request.DocumentId),
                     () => new KeyNotFoundException($"Document with id {request.DocumentId} not found."));
+        logger.LogInformation($"Document with id {request.DocumentId} found.");
         return await documentResult 
             .BindAsync(doc => operationService.ApplyOperationAsync(request, doc))
             .BindAsync(op => webSocketManager.BroadcastOperation(op, request.DocumentId))

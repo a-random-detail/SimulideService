@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using SimulideService.Domain.Contracts;
 
 namespace SimulideService.Domain.Data;
@@ -6,6 +7,8 @@ public class Operation
 {
     public Guid Id { get; set; }
     public Guid DocumentId { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public OperationType Type { get; set; }
     public int Position { get; set; }
     public String? Content { get; set; }
