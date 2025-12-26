@@ -5,9 +5,9 @@
       context: .
       dockerfile: SimulideService/Dockerfile
     environment:
-      DB_HOST: postgres 
+      DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: simulide-db 
+      DB_NAME: simulide-db
       DB_USER: simulide
       DB_PASSWORD: simulide-pw
       DB_POOLING: "true"
@@ -29,13 +29,13 @@
       - "5432:5432"
     environment:
       POSTGRES_DB: simulide-db
-      POSTGRES_USER: simulide 
+      POSTGRES_USER: simulide
       POSTGRES_PASSWORD: simulide-pw
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql 
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 1s
     networks:
       - simulide-net
@@ -43,5 +43,5 @@ volumes:
   postgres-data:
 
 networks:
-    simulide-net:
-      driver: bridge
+  simulide-net:
+    driver: bridge
