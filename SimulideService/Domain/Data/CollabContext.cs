@@ -8,4 +8,12 @@ public class CollabContext: DbContext
     
     public DbSet<Operation> Operations { get; set; }
     public DbSet<Document> Documents { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Operation>().ToTable("operations");
+        modelBuilder.Entity<Document>().ToTable("documents");
+        
+        base.OnModelCreating(modelBuilder);
+    }
 }
