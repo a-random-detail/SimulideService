@@ -221,7 +221,7 @@ public class CollaborationTests
       Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
       Assert.That(response.Data, Is.Null);
       Assert.That(response.Errors, Is.Not.Null);
-      Assert.That(response.Errors.First().Message, Is.EqualTo("Version is invalid, please try again."));;
+      Assert.That(response.Errors.First().Message, Is.EqualTo("Version is invalid. Expected version 1, got 16."));;
 
       Assert.That(clientMessages, Is.Empty);
       
