@@ -45,7 +45,11 @@ public class CollaborationHub(
             .BindAsync(doc => webSocketManager.JoinDocumentGroup(documentId, Context.ConnectionId))
             .MatchAsync<List<Exception>, CollabUserEvent, ServiceResponse<CollabUserEvent>>(
                 error: exceptions => Task.FromResult(HandleUserErrors(exceptions)),
-                success: evt => Task.FromResult(SuccessResult(HttpStatusCode.OK, evt)));
+                success: evt =>
+                {
+                    logger.LogInformation($"User joined. Active users: {evt.ActiveUsers.Count}");
+                    return Task.FromResult(SuccessResult(HttpStatusCode.OK, evt));
+                });
     }
 
     [HubMethodName("LeaveDocumentGroup")]
@@ -64,6 +68,13 @@ public class CollaborationHub(
         return await mediator
             .SendToEitherAsync(new GetDocumentByIdQuery(documentId),
                 () => new KeyNotFoundException($"Document with id {documentId} not found."));
+    }
+    
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        logger.LogInformation($"Connection {Context.ConnectionId} disconnected.");
+        await webSocketManager.HandleDisconnection(Context.ConnectionId);
+        await base.OnDisconnectedAsync(exception);
     }
     
     

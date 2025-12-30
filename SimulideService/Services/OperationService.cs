@@ -18,8 +18,14 @@ public class OperationService(
 {
    public async Task<Either<List<Exception>, Operation>> ApplyOperationAsync(ApplyOperationPayload request, Document document)
    {
+      logger.LogInformation("Applying operation to document {Document}", document);
       return await ApplyOperationPayloadValidator.FieldsAreValid(request, document)
-         .Bind(Operation.FromRequest)
+         .Bind(validated =>
+         {
+            logger.LogInformation("[OperationService] Applying operation to document {Document}", document);
+            logger.LogInformation("[OperationService] Validated operation payload: {ValidatedPayload}", validated);
+            return Operation.FromRequest(request);
+         })
          .BindAsync(operation => transactionManager.ExecuteInTransaction(async (dbContext) =>
          {
             var appliedOperation = await operationWriteRepository.CreateAsync(dbContext, operation);

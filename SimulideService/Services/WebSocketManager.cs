@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using SimulideService.Controllers;
 using SimulideService.Domain;
@@ -11,10 +12,12 @@ public interface IWebSocketManager
     Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId);
     Task<Either<List<Exception>, CollabUserEvent>> JoinDocumentGroup(Guid documentId, string connectionId);
     Task<Either<List<Exception>, CollabUserEvent>> LeaveDocumentGroup(Guid documentId, string connectionId);
+    Task HandleDisconnection(string connectionId);
 }
 
-public class WebSocketManager(IHubContext<CollaborationHub> hubContext): IWebSocketManager
+public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<WebSocketManager> logger): IWebSocketManager
 {
+    private static readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, CollabUser>> ActiveUsersByDocument = new();
     private readonly IHubContext<CollaborationHub> _hubContext = hubContext;
     
     public async Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId)
@@ -30,10 +33,23 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext): IWebSoc
         try
         {
             await _hubContext.Groups.AddToGroupAsync(connectionId, documentId.ToString());
+            var user = new CollabUser
+            {
+                UserId = connectionId,
+                Position = 0
+            };
+            
+            var documentUsers = ActiveUsersByDocument.GetOrAdd(documentId, _ => new ConcurrentDictionary<string, CollabUser>());
+            
+            documentUsers.TryAdd(connectionId, user);
+            
+            var activeUsers = documentUsers.Values.ToList();
+            
             var collabUserEvent = new CollabUserEvent
             {
                 Action = PartyActionType.Join,
-                ConnectionId = connectionId
+                ConnectionId = connectionId,
+                ActiveUsers = activeUsers
             };
             
             await _hubContext.Clients.Group(documentId.ToString())
@@ -55,8 +71,10 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext): IWebSoc
             var collabUserEvent = new CollabUserEvent
             {
                 Action = PartyActionType.Leave,
-                ConnectionId = connectionId
+                ConnectionId = connectionId,
             };
+            
+            
             
             await _hubContext.Clients.Group(documentId.ToString())
                 .SendAsync("PartyChanged", collabUserEvent);
@@ -68,4 +86,25 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext): IWebSoc
         }
     }
 
+    public async Task HandleDisconnection(string connectionId)
+    {
+        foreach (var (documentId, users) in ActiveUsersByDocument)
+        {
+            logger.LogInformation($"Handling disconnection for connection {connectionId} in document {documentId}");
+            ActiveUsersByDocument[documentId].TryRemove(connectionId, out var _);
+
+            var activeUsers = users.Values.ToList();
+            
+            var collabUserEvent = new CollabUserEvent
+            {
+                Action = PartyActionType.Leave,
+                ConnectionId = connectionId,
+                ActiveUsers = activeUsers 
+            };
+            
+            await _hubContext.Clients.Group(documentId.ToString())
+                .SendAsync("PartyChanged", collabUserEvent);
+
+        }
+    }
 }

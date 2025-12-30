@@ -12,8 +12,8 @@ using SimulideService.Domain.Data;
 namespace SimulideService.Migrations
 {
     [DbContext(typeof(CollabContext))]
-    [Migration("20250304162837_InitialTableCreation")]
-    partial class InitialTableCreation
+    [Migration("20251230203156_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,7 +49,7 @@ namespace SimulideService.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Documents");
+                    b.ToTable("documents", (string)null);
                 });
 
             modelBuilder.Entity("SimulideService.Domain.Data.Operation", b =>
@@ -81,7 +81,7 @@ namespace SimulideService.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Operations");
+                    b.ToTable("operations", (string)null);
                 });
 #pragma warning restore 612, 618
         }

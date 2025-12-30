@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SimulideService.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialTableCreation : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,7 +24,7 @@ namespace SimulideService.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Documents", x => x.Id);
+                    table.PrimaryKey("PK_documents", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -42,7 +42,7 @@ namespace SimulideService.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Operations", x => x.Id);
+                    table.PrimaryKey("PK_operations", x => x.Id);
                 });
         }
 

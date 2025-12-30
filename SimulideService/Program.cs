@@ -23,7 +23,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<DatabaseConfig>();
 builder.Services.AddSingleton<NpgsqlConnectionFactory>();
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 
@@ -101,8 +100,7 @@ static void ApplyMigrations(WebApplication webApplication)
 {
     using var scope = webApplication.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
-
-    if (webApplication.Environment.EnvironmentName != "Test")
+    if (!webApplication.Environment.IsEnvironment("Test"))
     {
         dbContext.Database.Migrate(); 
     }

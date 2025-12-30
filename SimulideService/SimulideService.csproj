@@ -36,5 +36,9 @@
     <ItemGroup>
         <InternalsVisibleTo Include="SimulideService.FunctionalTests" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Migrations\" />
+    </ItemGroup>
 
 </Project>

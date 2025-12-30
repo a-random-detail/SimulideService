@@ -8,7 +8,10 @@ public interface ITransactionManager<out TC> where TC : DbContext
    Task<Either<List<Exception>, T>> ExecuteInTransaction<T>(Func<TC, Task<T>> action); 
 }
 
-public class TransactionManager<TC>(TC dbContext): ITransactionManager<TC> where TC : DbContext
+public class TransactionManager<TC>(
+   TC dbContext, 
+   ILogger<TransactionManager<TC>> logger
+): ITransactionManager<TC> where TC : DbContext
 {
    public async Task<Either<List<Exception>, T>> ExecuteInTransaction<T>(Func<TC, Task<T>> action)
    {
@@ -23,6 +26,7 @@ public class TransactionManager<TC>(TC dbContext): ITransactionManager<TC> where
       }
       catch (Exception ex)
       {
+         logger.LogError(ex, "Error during transaction. Exception Type: {ExceptionType}", ex.GetType().Name);
          await transaction.RollbackAsync();
          return Either<List<Exception>, T>.Left([new Exception("An error occurred while processing the request.")]);
       }

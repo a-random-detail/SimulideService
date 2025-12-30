@@ -17,14 +17,13 @@ public class OperationWriteRepository : IOperationWriteRepository
        document.Version++;
        document.UpdatedAt = appliedOperation.CreatedAt;
        dbContext.Documents.Update(document);
-       return dbContext.SaveChangesAsync();
+       return Task.CompletedTask;
     }
 
 
     public async Task<Operation> CreateAsync(CollabContext dbContext, Operation operation)
    {
       dbContext.Operations.Add(operation);
-      await dbContext.SaveChangesAsync();
       return operation;
    }
 

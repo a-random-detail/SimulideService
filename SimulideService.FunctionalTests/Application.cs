@@ -49,6 +49,8 @@ public class Application
         });
         using var scope = Host.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<CollabContext>();
+        
+        await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.MigrateAsync();
     }
 

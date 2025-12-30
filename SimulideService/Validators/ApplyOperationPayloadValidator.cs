@@ -18,7 +18,7 @@ public static class ApplyOperationPayloadValidator
 
         if (document != null && request.Version != document.Version)
         {
-            errors.Add(new OperationValidationException("Version is invalid, please try again."));
+            errors.Add(new OperationValidationException($"Version is invalid. Expected version {document.Version}, got {request.Version}."));
         }
 
         if (request.Type == OperationType.None)

@@ -12,7 +12,7 @@ public interface IDocumentReadRepository
 
 public class DocumentReadRepository(IDbConnection dbConnection, ILogger<DocumentReadRepository> logger) : IDocumentReadRepository
 {
-   private const string GetDocumentByIdQuery = "SELECT * FROM \"Documents\" WHERE \"Id\" = @DocumentId";
+   private const string GetDocumentByIdQuery = "SELECT * FROM documents WHERE \"Id\" = @DocumentId";
    
    public async Task<Either<List<Exception>, Document>> GetDocumentByIdAsync(Guid documentId)
    {
