@@ -49,7 +49,7 @@ public class CollaborationHub(
     }
 
     [HubMethodName("LeaveDocumentGroup")]
-    public async Task<ServiceResponse<CollabUserEvent>> LeaveDocumentGroup(Guid documentId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResponse<CollabUserEvent>> LeaveDocumentGroup(Guid documentId)
     {
         var documentResult = await FetchDocumentByIdAsync(documentId);
         return await documentResult 

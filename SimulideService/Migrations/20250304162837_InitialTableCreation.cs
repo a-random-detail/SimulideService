@@ -12,7 +12,7 @@ namespace SimulideService.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Documents",
+                name: "documents",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -28,7 +28,7 @@ namespace SimulideService.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Operations",
+                name: "operations",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -50,10 +50,10 @@ namespace SimulideService.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Documents");
+                name: "documents");
 
             migrationBuilder.DropTable(
-                name: "Operations");
+                name: "operations");
         }
     }
 }
