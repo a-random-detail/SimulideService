@@ -90,10 +90,7 @@ public class CollaborationTests
 
       await Task.Delay(500);
       
-      Assert.That(client1Operations.Count, Is.EqualTo(1));
-      Assert.That(client1Operations[0].Position, Is.EqualTo(expected.Position));
-      Assert.That(client1Operations[0].Content, Is.EqualTo(expected.Content));
-      Assert.That(client1Operations[0].Version, Is.EqualTo(expected.Version));
+      Assert.That(client1Operations.Count, Is.EqualTo(0));
 
       Assert.That(client2Operations.Count, Is.EqualTo(1));
       Assert.That(client2Operations[0].Position, Is.EqualTo(expected.Position));
@@ -146,11 +143,7 @@ public class CollaborationTests
 
       await Task.Delay(500);
       
-      Assert.That(client1Operations.Count, Is.EqualTo(1));
-      Assert.That(client1Operations[0].Position, Is.EqualTo(expected.Position));
-      Assert.That(client1Operations[0].Content, Is.EqualTo(expected.Content));
-      Assert.That(client1Operations[0].Version, Is.EqualTo(expected.Version));
-
+      Assert.That(client1Operations.Count, Is.EqualTo(0));
       await client1.StopAsync();
 
       var response = await Application.Host!.Scenario(void (_) =>

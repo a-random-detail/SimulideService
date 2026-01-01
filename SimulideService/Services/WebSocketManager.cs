@@ -9,7 +9,7 @@ namespace SimulideService.Services;
 
 public interface IWebSocketManager
 {
-    Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId);
+    Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId, string senderConnectionId);
     Task<Either<List<Exception>, CollabUserEvent>> JoinDocumentGroup(Guid documentId, string connectionId);
     Task<Either<List<Exception>, CollabUserEvent>> LeaveDocumentGroup(Guid documentId, string connectionId);
     Task HandleDisconnection(string connectionId);
@@ -20,10 +20,10 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
     private static readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, CollabUser>> ActiveUsersByDocument = new();
     private readonly IHubContext<CollaborationHub> _hubContext = hubContext;
     
-    public async Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId)
+    public async Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId, string senderConnectionId )
     {
 
-        await _hubContext.Clients.Group(documentId.ToString())
+        await _hubContext.Clients.GroupExcept(documentId.ToString(), [ senderConnectionId ])
             .SendAsync("ReceiveOperation", operation);
         return Either<List<Exception>, Operation>.Right(operation);
     }

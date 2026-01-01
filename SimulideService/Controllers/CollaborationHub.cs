@@ -30,7 +30,7 @@ public class CollaborationHub(
         logger.LogInformation($"Document with id {request.DocumentId} found.");
         return await documentResult 
             .BindAsync(doc => operationService.ApplyOperationAsync(request, doc))
-            .BindAsync(op => webSocketManager.BroadcastOperation(op, request.DocumentId))
+            .BindAsync(op => webSocketManager.BroadcastOperation(op, request.DocumentId, Context.ConnectionId))
             .MatchAsync<List<Exception>, Operation, ServiceResponse<Operation>>(
                 error: (exceptions) => Task.FromResult(HandleErrors(exceptions)),
                 success: (operation) => Task.FromResult(SuccessResult(HttpStatusCode.OK, operation)));
