@@ -24,6 +24,7 @@ public class CollaborationHub(
     public async Task<ServiceResponse<Operation>> ApplyOperation(ApplyOperationPayload request)
     {
         logger.LogInformation($"Request received to apply operation of type {request.Type} with content {request.Content} to document {request.DocumentId}.");
+        logger.LogInformation($"Debugging transactions - ConnectionId: {Context.ConnectionId} - DocumentId: {request.DocumentId} - Request: {request}");
         var documentResult = await mediator
                 .SendToEitherAsync(new GetDocumentByIdQuery(request.DocumentId),
                     () => new KeyNotFoundException($"Document with id {request.DocumentId} not found."));

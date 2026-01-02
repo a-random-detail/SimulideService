@@ -22,6 +22,9 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
     
     public async Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId, string senderConnectionId )
     {
+        var usersInDocument = ActiveUsersByDocument.GetValueOrDefault(documentId);
+        var usersInGroup = _hubContext.Clients.All.ToString();
+        logger.LogInformation("Broadcasting operation to document {DocumentId} for users lookup: {usersInDocument} - clients: {usersInGroup}", documentId, usersInDocument, usersInGroup);
 
         await _hubContext.Clients.GroupExcept(documentId.ToString(), [ senderConnectionId ])
             .SendAsync("ReceiveOperation", operation);
@@ -32,12 +35,12 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
     {
         try
         {
-            await _hubContext.Groups.AddToGroupAsync(connectionId, documentId.ToString());
             var user = new CollabUser
             {
                 UserId = connectionId,
                 Position = 0
             };
+            await _hubContext.Groups.AddToGroupAsync(connectionId, documentId.ToString());
             
             var documentUsers = ActiveUsersByDocument.GetOrAdd(documentId, _ => new ConcurrentDictionary<string, CollabUser>());
             
