@@ -41,14 +41,10 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
             await hubContext.Groups.AddToGroupAsync(connectionId, documentId.ToString());
             
             var documentUsers = ActiveUsersByDocument.GetOrAdd(documentId.ToString(), _ => new ConcurrentDictionary<string, CollabUser>());
-            documentUsers.Select(x => x.Value.UserId).ToList().ForEach(u => 
-                logger.LogInformation("[WebSocketManager] Before add -- Active user in document {DocumentId}: {UserId}", documentId, u));
             
             logger.LogInformation("[WebSocketManager] User {ConnectionId} joining document {DocumentId}. Current users: {CurrentUsersCount}", connectionId, documentId, documentUsers.Count);
             documentUsers.AddOrUpdate(connectionId, user, (key, oldValue) => user);
             
-            documentUsers.Select(x => x.Value.UserId).ToList().ForEach(u => 
-                logger.LogInformation("[WebSocketManager] After add -- Active user in document {DocumentId}: {UserId}", documentId, u));
             logger.LogInformation("[WebSocketManager] User {ConnectionId} joined document {DocumentId}. Updated users: {UpdatedUsersCount}", connectionId, documentId, documentUsers.Count);
             
             var activeUsers = documentUsers.Values.ToList();
