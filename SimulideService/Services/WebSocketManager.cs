@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using SimulideService.Controllers;
 using SimulideService.Domain;
-using SimulideService.Domain.Contracts;
 using SimulideService.Domain.Data;
 
 namespace SimulideService.Services;
@@ -17,11 +16,11 @@ public interface IWebSocketManager
 
 public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<WebSocketManager> logger): IWebSocketManager
 {
-    private static readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, CollabUser>> ActiveUsersByDocument = new();
+    private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, CollabUser>> ActiveUsersByDocument = new();
     
     public async Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId, string senderConnectionId )
     {
-        var usersInDocument = ActiveUsersByDocument.GetValueOrDefault(documentId);
+        var usersInDocument = ActiveUsersByDocument.GetValueOrDefault(documentId.ToString());
         var usersInGroup = hubContext.Clients.All.ToString();
         logger.LogInformation("Broadcasting operation to document {DocumentId} for users lookup: {usersInDocument} - clients: {usersInGroup}", documentId, usersInDocument, usersInGroup);
 
@@ -41,9 +40,16 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
             };
             await hubContext.Groups.AddToGroupAsync(connectionId, documentId.ToString());
             
-            var documentUsers = ActiveUsersByDocument.GetOrAdd(documentId, _ => new ConcurrentDictionary<string, CollabUser>());
+            var documentUsers = ActiveUsersByDocument.GetOrAdd(documentId.ToString(), _ => new ConcurrentDictionary<string, CollabUser>());
+            documentUsers.Select(x => x.Value.UserId).ToList().ForEach(u => 
+                logger.LogInformation("[WebSocketManager] Before add -- Active user in document {DocumentId}: {UserId}", documentId, u));
             
-            documentUsers.TryAdd(connectionId, user);
+            logger.LogInformation("[WebSocketManager] User {ConnectionId} joining document {DocumentId}. Current users: {CurrentUsersCount}", connectionId, documentId, documentUsers.Count);
+            documentUsers.AddOrUpdate(connectionId, user, (key, oldValue) => user);
+            
+            documentUsers.Select(x => x.Value.UserId).ToList().ForEach(u => 
+                logger.LogInformation("[WebSocketManager] After add -- Active user in document {DocumentId}: {UserId}", documentId, u));
+            logger.LogInformation("[WebSocketManager] User {ConnectionId} joined document {DocumentId}. Updated users: {UpdatedUsersCount}", connectionId, documentId, documentUsers.Count);
             
             var activeUsers = documentUsers.Values.ToList();
             
@@ -75,6 +81,16 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
                 Action = PartyActionType.Leave,
                 ConnectionId = connectionId,
             };
+            
+            if (ActiveUsersByDocument.TryGetValue(documentId.ToString(), out var users))
+            {
+                users.TryRemove(connectionId, out var _);
+                collabUserEvent.ActiveUsers = users.Values.ToList();
+            }
+            else
+            {
+                collabUserEvent.ActiveUsers = [];
+            }
             
             await hubContext.Clients.Group(documentId.ToString())
                 .SendAsync("PartyChanged", collabUserEvent);
