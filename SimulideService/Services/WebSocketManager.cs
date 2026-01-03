@@ -30,15 +30,7 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
             logger.LogInformation("[WebSocketManager] Operation {OperationId} broadcasted to document {DocumentId}",
                 operation.Id, docKey);
             return operation;
-        }).BindAsync(operation =>
-            EitherExtensions.TryAsync(async () =>
-            {
-                await hubContext.Clients.GroupExcept(docKey, new[] { senderConnectionId })
-                    .SendAsync("ReceiveOperation", operation);
-                logger.LogInformation("[WebSocketManager] Operation {OperationId} broadcasted to document {DocumentId}",
-                    operation.Id, documentId);
-                return operation;
-            }));
+        });
     }
     
     public async Task<Either<List<Exception>, CollabUserEvent>> JoinDocumentGroup(Guid documentId, string connectionId)
