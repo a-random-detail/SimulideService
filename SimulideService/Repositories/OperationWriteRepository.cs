@@ -11,14 +11,16 @@ public interface IOperationWriteRepository
 
 public class OperationWriteRepository : IOperationWriteRepository 
 {
-    public Task ApplyOperationToDocument(CollabContext dbContext, Operation appliedOperation, Document document)
-    {
-        document.Content = ApplyOperationToDocumentContent(document.Content, appliedOperation); 
-       document.Version++;
-       document.UpdatedAt = appliedOperation.CreatedAt;
-       dbContext.Documents.Update(document);
-       return Task.CompletedTask;
-    }
+   public Task ApplyOperationToDocument(CollabContext dbContext, Operation appliedOperation, Document document)
+   {
+      appliedOperation.Version = document.Version+1;
+      document.Content = ApplyOperationToDocumentContent(document.Content, appliedOperation); 
+      
+      document.Version = appliedOperation.Version;
+      document.UpdatedAt = appliedOperation.CreatedAt;
+      dbContext.Documents.Update(document);
+      return Task.CompletedTask;
+   }
 
 
     public async Task<Operation> CreateAsync(CollabContext dbContext, Operation operation)

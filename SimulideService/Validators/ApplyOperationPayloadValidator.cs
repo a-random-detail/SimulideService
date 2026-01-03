@@ -16,7 +16,7 @@ public static class ApplyOperationPayloadValidator
             errors.Add(new OperationValidationException("DocumentId is missing or invalid."));
         }
 
-        if (document != null && request.Version != document.Version)
+        if (document != null && request.Version != document.Version + 1)
         {
             errors.Add(new OperationValidationException($"Version is invalid. Expected version {document.Version}, got {request.Version}."));
         }
