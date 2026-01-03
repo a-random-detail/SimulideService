@@ -1,3 +1,5 @@
+using MediatR;
+
 namespace SimulideService.Domain;
 
 public static class EitherExtensions
@@ -32,5 +34,31 @@ public static class EitherExtensions
     {
         var either = await eitherTask;
         return await either.MatchAsync(error, success);
+    }
+    
+    public async static Task<Either<List<Exception>, T>> TryAsync<T>(Func<Task<T>> func)
+    {
+        try
+        {
+            var result = await func();
+            return Either<List<Exception>, T>.Right(result);
+        }
+        catch (Exception ex)
+        {
+            return Either<List<Exception>, T>.Left([ex]);
+        }
+    }
+    
+    public async static Task<Either<List<Exception>, Unit>> TryAsync(Func<Task> func)
+    {
+        try
+        {
+            await func();
+            return Either<List<Exception>, Unit>.Right(Unit.Value);
+        }
+        catch (Exception ex)
+        {
+            return Either<List<Exception>, Unit>.Left([ex]);
+        }
     }
 }
