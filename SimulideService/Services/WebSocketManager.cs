@@ -26,7 +26,7 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
         return await EitherExtensions.TryAsync(async () =>
         {
             await hubContext.Clients
-                .GroupExcept(docKey, new[] { senderConnectionId })
+                .Group(docKey)
                 .SendAsync("ReceiveOperation", operation);
             logger.LogInformation("[WebSocketManager] Operation {OperationId} broadcasted to document {DocumentId}",
                 operation.Id, docKey);
