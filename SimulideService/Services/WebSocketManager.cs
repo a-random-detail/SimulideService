@@ -20,13 +20,40 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
     
     public async Task<Either<List<Exception>, Operation>> BroadcastOperation(Operation operation, Guid documentId, string senderConnectionId )
     {
-        var usersInDocument = ActiveUsersByDocument.GetValueOrDefault(documentId.ToString());
-        var usersInGroup = hubContext.Clients.All.ToString();
-        logger.LogInformation("Broadcasting operation to document {DocumentId} for users lookup: {usersInDocument} - clients: {usersInGroup}", documentId, usersInDocument, usersInGroup);
+        try
+        {
+            if (!ActiveUsersByDocument.TryGetValue(senderConnectionId,
+                    out ConcurrentDictionary<string, CollabUser> usersInDocument))
+            {
+                logger.LogInformation("[WebSocketManager] No active users found for document {DocumentId} when broadcasting operation {OperationId}",
+                    documentId, operation.Id);
+            }
+            var targets = usersInDocument.Keys.Where(id => id != senderConnectionId);
+            
+            logger.LogInformation(
+                "[WebSocketManager] Broadcasting operation {OperationId} to document {DocumentId} from sender {SenderConnectionId} to users : {targets}",
+                operation.Id, documentId, senderConnectionId, targets);
 
-        await hubContext.Clients.GroupExcept(documentId.ToString(), [ senderConnectionId ])
-            .SendAsync("ReceiveOperation", operation);
-        return Either<List<Exception>, Operation>.Right(operation);
+            foreach (var target in targets)
+            {
+                logger.LogInformation("[WebSocketManager] Targeting user with connection id {TargetConnectionId} for operation {OperationId} in document {DocumentId}",
+                    target, operation.Id, documentId);
+                await hubContext.Clients.Client(target).SendAsync("ReceiveOperation", operation);
+            }
+
+            // await hubContext.Clients
+                    // .Group(documentId.ToString())
+                // .GroupExcept(documentId.ToString(), [senderConnectionId])
+                // .SendAsync("ReceiveOperation", operation);
+            return Either<List<Exception>, Operation>.Right(operation);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("[WebSocketManager] Error broadcasting operation {OperationId} to document {DocumentId}. Exception: {Exception}",
+                operation.Id, documentId, ex);
+            return Either<List<Exception>, Operation>.Left([ex]);
+        }
+
     }
     
     public async Task<Either<List<Exception>, CollabUserEvent>> JoinDocumentGroup(Guid documentId, string connectionId)
@@ -102,7 +129,7 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
     {
         foreach (var (documentId, users) in ActiveUsersByDocument)
         {
-            logger.LogInformation($"Handling disconnection for connection {connectionId} in document {documentId}");
+            logger.LogInformation($"[WebSocketManager] Handling disconnection for connection {connectionId} in document {documentId}");
             ActiveUsersByDocument[documentId].TryRemove(connectionId, out var _);
 
             var activeUsers = users.Values.ToList();
