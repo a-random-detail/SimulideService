@@ -25,7 +25,8 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
         logger.LogInformation("[WebSocketManager] Broadcasting operation {OperationId} to document {DocumentId} from sender {SenderConnectionId}", operation.Id, documentId, senderConnectionId);
         return await EitherExtensions.TryAsync(async () =>
         {
-            await hubContext.Clients.GroupExcept(docKey, new[] { senderConnectionId })
+            await hubContext.Clients
+                .GroupExcept(docKey, new[] { senderConnectionId })
                 .SendAsync("ReceiveOperation", operation);
             logger.LogInformation("[WebSocketManager] Operation {OperationId} broadcasted to document {DocumentId}",
                 operation.Id, docKey);
@@ -35,6 +36,7 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
     
     public async Task<Either<List<Exception>, CollabUserEvent>> JoinDocumentGroup(Guid documentId, string connectionId)
     {
+        var docKey = documentId.ToString();
         try
         {
             var user = new CollabUser
@@ -44,7 +46,7 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
             };
             await hubContext.Groups.AddToGroupAsync(connectionId, documentId.ToString());
             
-            var documentUsers = ActiveUsersByDocument.GetOrAdd(documentId.ToString(), _ => new ConcurrentDictionary<string, CollabUser>());
+            var documentUsers = ActiveUsersByDocument.GetOrAdd(docKey, _ => new ConcurrentDictionary<string, CollabUser>());
             
             logger.LogInformation("[WebSocketManager] User {ConnectionId} joining document {DocumentId}. Current users: {CurrentUsersCount}", connectionId, documentId, documentUsers.Count);
             documentUsers.AddOrUpdate(connectionId, user, (key, oldValue) => user);
@@ -60,7 +62,7 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
                 ActiveUsers = activeUsers
             };
             
-            await hubContext.Clients.Group(documentId.ToString())
+            await hubContext.Clients.Group(docKey)
                 .SendAsync("PartyChanged", collabUserEvent);
             
             return Either<List<Exception>, CollabUserEvent>.Right(collabUserEvent);
@@ -73,16 +75,17 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
     
     public async Task<Either<List<Exception>, CollabUserEvent>> LeaveDocumentGroup(Guid documentId, string connectionId)
     {
+        var docKey = documentId.ToString();
         try
         {
-            await hubContext.Groups.RemoveFromGroupAsync(connectionId, documentId.ToString());
+            await hubContext.Groups.RemoveFromGroupAsync(connectionId, docKey);
             var collabUserEvent = new CollabUserEvent
             {
                 Action = PartyActionType.Leave,
                 ConnectionId = connectionId,
             };
             
-            if (ActiveUsersByDocument.TryGetValue(documentId.ToString(), out var users))
+            if (ActiveUsersByDocument.TryGetValue(docKey, out var users))
             {
                 users.TryRemove(connectionId, out var _);
                 collabUserEvent.ActiveUsers = users.Values.ToList();
@@ -92,7 +95,7 @@ public class WebSocketManager(IHubContext<CollaborationHub> hubContext, ILogger<
                 collabUserEvent.ActiveUsers = [];
             }
             
-            await hubContext.Clients.Group(documentId.ToString())
+            await hubContext.Clients.Group(docKey)
                 .SendAsync("PartyChanged", collabUserEvent);
             
             return Either<List<Exception>, CollabUserEvent>.Right(collabUserEvent);
